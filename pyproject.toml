@@ -60,8 +60,12 @@ mypy_path = "src"
 packages = ["contractmodel"]
 
 [[tool.mypy.overrides]]
-module = ["yaml.*", "pandas.*", "polars.*", "pyarrow.*", "rdflib.*"]
+module = ["yaml.*", "pandas.*", "polars.*", "pyarrow.*", "rdflib.*", "numpy.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["numpy.*"]
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
