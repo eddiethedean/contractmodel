@@ -12,7 +12,9 @@ def export_json_schema(contract: CanonicalContract) -> dict[str, Any]:
     """Export a contract as JSON Schema draft 2020-12."""
     properties = {field.name: _field_to_schema(field) for field in contract.contract_schema.fields}
     required = [
-        field.name for field in contract.contract_schema.fields if field.required and not field.nullable
+        field.name
+        for field in contract.contract_schema.fields
+        if field.required and not field.nullable
     ]
 
     schema: dict[str, Any] = {
