@@ -1,0 +1,45 @@
+contract_id: customer-events
+name: Customer Events
+version: 1.0.0
+kind: dataset
+description: Contract for customer event records.
+status: active
+
+ownership:
+  owner: customer-platform
+  team: customer-platform
+  contacts:
+    - email: data-team@example.com
+      role: steward
+
+schema:
+  primary_key:
+    - event_id
+  fields:
+    - name: event_id
+      logical_type: uuid
+      required: true
+      nullable: false
+      description: Unique event identifier.
+    - name: customer_id
+      logical_type: string
+      required: true
+      nullable: false
+      description: Customer identifier.
+      semantic:
+        ontology_class: cdao:Person
+        ontology_property: cdao:hasIdentifier
+    - name: event_timestamp
+      logical_type: datetime
+      required: true
+      nullable: false
+      description: Event timestamp.
+    - name: event_type
+      logical_type: enum
+      required: true
+      nullable: false
+      constraints:
+        enum_values:
+          - created
+          - updated
+          - deleted
