@@ -33,7 +33,7 @@ def export_shacl(contract: CanonicalContract) -> str:
         )
         _add_field_constraints(graph, prop_uri, field)
 
-    return graph.serialize(format="turtle")
+    return str(graph.serialize(format="turtle"))
 
 
 def _add_field_constraints(graph: Any, prop_uri: Any, field: ContractField) -> None:

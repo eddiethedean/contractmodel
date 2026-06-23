@@ -33,4 +33,4 @@ def export_owl(contract: CanonicalContract) -> str:
         if field.semantic.ontology_property:
             graph.add((prop_uri, OWL.equivalentProperty, URIRef(field.semantic.ontology_property)))
 
-    return graph.serialize(format="turtle")
+    return str(graph.serialize(format="turtle"))

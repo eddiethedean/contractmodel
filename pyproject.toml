@@ -63,10 +63,6 @@ packages = ["contractmodel"]
 module = ["yaml.*", "pandas.*", "polars.*", "pyarrow.*", "rdflib.*", "numpy.*"]
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = ["numpy.*"]
-follow_imports = "skip"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov=contractmodel --cov-report=term-missing"
