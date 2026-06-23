@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from contractmodel.core.ccm import CanonicalContract
+from contractmodel.core.ccm import CanonicalContract, ContractField
 from contractmodel.core.types import CompatibilityMode
 from contractmodel.diff.rules import (
     classify_field_change,
+    detect_renames,
+    is_added_field_breaking,
     is_removed_field_breaking,
 )
 
@@ -60,19 +62,32 @@ def diff_contracts(
     mode: CompatibilityMode = CompatibilityMode.BACKWARD,
 ) -> ContractDiff:
     """Compute the diff between two contracts."""
-    source_fields = {field.name: field for field in source.schema.fields}
-    target_fields = {field.name: field for field in target.schema.fields}
+    source_fields = {field.name: field for field in source.contract_schema.fields}
+    target_fields = {field.name: field for field in target.contract_schema.fields}
 
-    added = sorted(set(target_fields) - set(source_fields))
-    removed = sorted(set(source_fields) - set(target_fields))
+    added_names = set(target_fields) - set(source_fields)
+    removed_names = set(source_fields) - set(target_fields)
+
+    removed_map = {name: source_fields[name] for name in removed_names}
+    added_map = {name: target_fields[name] for name in added_names}
+    paired_removed, paired_added, rename_messages = detect_renames(removed_map, added_map)
+
+    added = sorted(added_names - paired_added)
+    removed = sorted(removed_names - paired_removed)
 
     changed_fields: list[FieldChange] = []
     breaking: list[BreakingChange] = []
     non_breaking: list[NonBreakingChange] = []
 
+    for message in rename_messages:
+        if "renamed" in message:
+            non_breaking.append(NonBreakingChange(code="FIELD_RENAMED", message=message))
+        else:
+            breaking.append(BreakingChange(code="FIELD_RENAMED", message=message))
+
     for name in removed:
         field = source_fields[name]
-        if is_removed_field_breaking(field):
+        if is_removed_field_breaking(field, mode=mode):
             breaking.append(
                 BreakingChange(
                     code="FIELD_REMOVED",
@@ -91,23 +106,22 @@ def diff_contracts(
 
     for name in added:
         field = target_fields[name]
-        if field.required and not field.nullable:
-            if mode == CompatibilityMode.FORWARD:
-                breaking.append(
-                    BreakingChange(
-                        code="FIELD_ADDED",
-                        message=f"Required field '{name}' was added",
-                        field=name,
-                    )
+        if is_added_field_breaking(field, mode=mode):
+            breaking.append(
+                BreakingChange(
+                    code="FIELD_ADDED",
+                    message=f"Required field '{name}' was added",
+                    field=name,
                 )
-            else:
-                non_breaking.append(
-                    NonBreakingChange(
-                        code="FIELD_ADDED",
-                        message=f"Field '{name}' was added",
-                        field=name,
-                    )
+            )
+        elif field.required and field.nullable:
+            non_breaking.append(
+                NonBreakingChange(
+                    code="FIELD_ADDED",
+                    message=f"Required nullable field '{name}' was added",
+                    field=name,
                 )
+            )
         else:
             non_breaking.append(
                 NonBreakingChange(
@@ -120,32 +134,102 @@ def diff_contracts(
     for name in sorted(set(source_fields) & set(target_fields)):
         old_field = source_fields[name]
         new_field = target_fields[name]
-        if old_field == new_field:
-            continue
-
-        changed_fields.append(
-            FieldChange(
-                field=name,
-                change_type="modified",
-                old_value=old_field.logical_type.value,
-                new_value=new_field.logical_type.value,
-            )
+        _diff_field_pair(
+            name,
+            old_field,
+            new_field,
+            mode=mode,
+            changed_fields=changed_fields,
+            breaking=breaking,
+            non_breaking=non_breaking,
         )
 
-        field_breaking, field_non_breaking = classify_field_change(old_field, new_field, mode=mode)
-        for message in field_breaking:
-            breaking.append(BreakingChange(code="FIELD_CHANGED", message=message, field=name))
-        for message in field_non_breaking:
-            non_breaking.append(
-                NonBreakingChange(code="FIELD_CHANGED", message=message, field=name)
-            )
+    if source.governance != target.governance and target.governance is not None:
+        non_breaking.append(
+            NonBreakingChange(code="GOVERNANCE_CHANGED", message="Governance metadata updated")
+        )
+    if source.semantics != target.semantics and target.semantics is not None:
+        non_breaking.append(
+            NonBreakingChange(code="SEMANTICS_CHANGED", message="Semantic metadata updated")
+        )
 
     return ContractDiff(
         source_version=source.version,
         target_version=target.version,
         added_fields=added,
         removed_fields=removed,
-        changed_fields=changed_fields,
         breaking_changes=breaking,
         non_breaking_changes=non_breaking,
+        changed_fields=changed_fields,
     )
+
+
+def _diff_field_pair(
+    name: str,
+    old_field: ContractField,
+    new_field: ContractField,
+    *,
+    mode: CompatibilityMode,
+    changed_fields: list[FieldChange],
+    breaking: list[BreakingChange],
+    non_breaking: list[NonBreakingChange],
+) -> None:
+    if old_field == new_field:
+        return
+
+    summary = _summarize_change(old_field, new_field)
+    changed_fields.append(
+        FieldChange(
+            field=name,
+            change_type=summary,
+            old_value=old_field.logical_type.value,
+            new_value=new_field.logical_type.value,
+        )
+    )
+
+    field_breaking, field_non_breaking = classify_field_change(old_field, new_field, mode=mode)
+    for message in field_breaking:
+        breaking.append(BreakingChange(code="FIELD_CHANGED", message=message, field=name))
+    for message in field_non_breaking:
+        non_breaking.append(NonBreakingChange(code="FIELD_CHANGED", message=message, field=name))
+
+    if old_field.children or new_field.children:
+        old_children = {child.name: child for child in old_field.children}
+        new_children = {child.name: child for child in new_field.children}
+        for child_name in sorted(set(old_children) | set(new_children)):
+            if child_name not in old_children:
+                breaking.append(
+                    BreakingChange(
+                        code="FIELD_CHANGED",
+                        message=f"Nested field '{name}.{child_name}' was added",
+                        field=f"{name}.{child_name}",
+                    )
+                )
+            elif child_name not in new_children:
+                breaking.append(
+                    BreakingChange(
+                        code="FIELD_CHANGED",
+                        message=f"Nested field '{name}.{child_name}' was removed",
+                        field=f"{name}.{child_name}",
+                    )
+                )
+            else:
+                _diff_field_pair(
+                    f"{name}.{child_name}",
+                    old_children[child_name],
+                    new_children[child_name],
+                    mode=mode,
+                    changed_fields=changed_fields,
+                    breaking=breaking,
+                    non_breaking=non_breaking,
+                )
+
+
+def _summarize_change(old_field: ContractField, new_field: ContractField) -> str:
+    if old_field.logical_type != new_field.logical_type:
+        return "type_changed"
+    if old_field.constraints != new_field.constraints:
+        return "constraints_changed"
+    if old_field.description != new_field.description:
+        return "metadata_changed"
+    return "modified"

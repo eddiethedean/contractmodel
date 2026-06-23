@@ -7,9 +7,9 @@ import re
 import uuid
 from decimal import Decimal
 from enum import Enum
-from typing import Any, cast, get_args, get_origin
+from typing import Any, Literal, cast, get_args, get_origin
 
-from pydantic import BaseModel, EmailStr, Field, create_model
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, create_model
 from pydantic.networks import AnyUrl
 
 from contractmodel.core.ccm import CanonicalContract, ContractField, ContractSchema
@@ -22,13 +22,25 @@ def generate_pydantic_model(
     contract: CanonicalContract,
     *,
     class_name: str | None = None,
+    schema_only: bool = False,
+    forbid_extra: bool = True,
 ) -> type[BaseModel]:
     """Generate a Pydantic V2 model from a CanonicalContract."""
     model_name = class_name or _to_class_name(contract.name)
-    field_defs = _build_field_definitions(contract.schema.fields, model_name)
+    field_defs = _build_field_definitions(
+        contract.contract_schema.fields,
+        model_name,
+        schema_only=schema_only,
+    )
+    extra_mode: Literal["forbid", "ignore"] = "forbid" if forbid_extra else "ignore"
+    base = type(
+        f"{model_name}Base",
+        (BaseModel,),
+        {"model_config": ConfigDict(extra=extra_mode)},
+    )
     return create_model(
         model_name,
-        __base__=ContractModel,
+        __base__=base,
         **field_defs,
     )
 
@@ -57,16 +69,23 @@ def contract_from_pydantic(
 def _build_field_definitions(
     fields: list[ContractField],
     model_name: str,
+    *,
+    schema_only: bool = False,
 ) -> dict[str, Any]:
     field_defs: dict[str, Any] = {}
     for field in fields:
-        field_defs[field.name] = _build_single_field(field, model_name)
+        field_defs[field.name] = _build_single_field(field, model_name, schema_only=schema_only)
     return field_defs
 
 
-def _build_single_field(field: ContractField, model_name: str) -> Any:
-    python_type = _logical_type_to_python(field, model_name)
-    field_kwargs = _constraints_to_field_kwargs(field.constraints)
+def _build_single_field(
+    field: ContractField,
+    model_name: str,
+    *,
+    schema_only: bool = False,
+) -> Any:
+    python_type = _logical_type_to_python(field, model_name, schema_only=schema_only)
+    field_kwargs = {} if schema_only else _constraints_to_field_kwargs(field.constraints)
 
     annotation, default = _apply_required_nullable(field, python_type)
 
@@ -89,12 +108,18 @@ def _apply_required_nullable(
     if field.required and field.nullable:
         return python_type | None, ...
     if not field.required and not field.nullable:
-        default = field.default if field.default is not None else ...
-        return python_type, default
-    return python_type | None, field.default if field.default is not None else None
+        if field.default is not None:
+            return python_type, field.default
+        return python_type, ...
+    return python_type | None, None if field.default is None else field.default
 
 
-def _logical_type_to_python(field: ContractField, model_name: str) -> Any:
+def _logical_type_to_python(
+    field: ContractField,
+    model_name: str,
+    *,
+    schema_only: bool = False,
+) -> Any:
     logical_type = field.logical_type
 
     if logical_type == LogicalType.ENUM:
@@ -102,7 +127,11 @@ def _logical_type_to_python(field: ContractField, model_name: str) -> Any:
 
     if logical_type == LogicalType.OBJECT:
         nested_name = f"{model_name}{_to_class_name(field.name)}"
-        nested_fields = _build_field_definitions(field.children, nested_name)
+        nested_fields = _build_field_definitions(
+            field.children,
+            nested_name,
+            schema_only=schema_only,
+        )
         return cast(
             type[BaseModel],
             create_model(nested_name, __base__=ContractModel, **nested_fields),
@@ -111,7 +140,11 @@ def _logical_type_to_python(field: ContractField, model_name: str) -> Any:
     if logical_type == LogicalType.ARRAY:
         if field.children:
             child_name = f"{model_name}{_to_class_name(field.name)}Item"
-            item_type = _logical_type_to_python(field.children[0], child_name)
+            item_type = _logical_type_to_python(
+                field.children[0],
+                child_name,
+                schema_only=schema_only,
+            )
         else:
             item_type = Any
         return list[item_type]  # type: ignore[valid-type]
@@ -119,7 +152,11 @@ def _logical_type_to_python(field: ContractField, model_name: str) -> Any:
     if logical_type == LogicalType.MAP:
         if field.children:
             child_name = f"{model_name}{_to_class_name(field.name)}Value"
-            value_type = _logical_type_to_python(field.children[0], child_name)
+            value_type = _logical_type_to_python(
+                field.children[0],
+                child_name,
+                schema_only=schema_only,
+            )
         else:
             value_type = Any
         return dict[str, value_type]  # type: ignore[valid-type]
@@ -146,7 +183,19 @@ def _logical_type_to_python(field: ContractField, model_name: str) -> Any:
 def _create_enum_class(field: ContractField, model_name: str) -> type[Enum]:
     enum_name = f"{model_name}{_to_class_name(field.name)}Enum"
     values = field.constraints.enum_values or []
-    members = {str(v).upper().replace("-", "_"): v for v in values}
+    members: dict[str, Any] = {}
+    used_names: set[str] = set()
+    for index, value in enumerate(values):
+        base = re.sub(r"[^a-zA-Z0-9_]", "_", str(value).upper()).strip("_")
+        if not base or base[0].isdigit():
+            base = f"VALUE_{index}"
+        name = base
+        suffix = 1
+        while name in used_names:
+            name = f"{base}_{suffix}"
+            suffix += 1
+        used_names.add(name)
+        members[name] = value
     if not members:
         members = {"UNKNOWN": "unknown"}
     return cast(type[Enum], Enum(enum_name, members))
@@ -172,8 +221,20 @@ def _field_from_pydantic_field(field_name: str, field_info: Any) -> ContractFiel
     required = field_info.is_required()
     default = None if field_info.is_required() else field_info.default
     nullable = _is_nullable(annotation)
+    constraints = _constraints_from_field_info(field_info)
 
-    logical_type, children, constraints = _python_type_to_logical(annotation, field_name)
+    logical_type, children, inferred = _python_type_to_logical(annotation, field_name)
+    if not constraints.min_value and inferred.min_value is None:
+        constraints = inferred
+    elif inferred.enum_values:
+        constraints = FieldConstraints(
+            min_value=constraints.min_value or inferred.min_value,
+            max_value=constraints.max_value or inferred.max_value,
+            min_length=constraints.min_length or inferred.min_length,
+            max_length=constraints.max_length or inferred.max_length,
+            pattern=constraints.pattern or inferred.pattern,
+            enum_values=inferred.enum_values,
+        )
 
     return ContractField(
         name=field_name,
@@ -184,6 +245,23 @@ def _field_from_pydantic_field(field_name: str, field_info: Any) -> ContractFiel
         constraints=constraints,
         children=children,
     )
+
+
+def _constraints_from_field_info(field_info: Any) -> FieldConstraints:
+    metadata = getattr(field_info, "metadata", [])
+    kwargs: dict[str, Any] = {}
+    for item in metadata:
+        if hasattr(item, "ge"):
+            kwargs["min_value"] = item.ge
+        if hasattr(item, "le"):
+            kwargs["max_value"] = item.le
+        if hasattr(item, "min_length"):
+            kwargs["min_length"] = item.min_length
+        if hasattr(item, "max_length"):
+            kwargs["max_length"] = item.max_length
+        if hasattr(item, "pattern"):
+            kwargs["pattern"] = item.pattern
+    return FieldConstraints(**kwargs)
 
 
 def _is_nullable(annotation: Any) -> bool:
@@ -198,6 +276,11 @@ def _python_type_to_logical(
     annotation: Any,
     field_name: str,
 ) -> tuple[LogicalType, list[ContractField], FieldConstraints]:
+    if annotation is EmailStr:
+        return LogicalType.EMAIL, [], FieldConstraints()
+    if annotation is AnyUrl:
+        return LogicalType.URI, [], FieldConstraints()
+
     origin = get_origin(annotation)
     args = get_args(annotation)
 

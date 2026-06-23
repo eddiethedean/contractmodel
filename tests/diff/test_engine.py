@@ -17,7 +17,7 @@ def _base_contract() -> DataContract:
 def test_add_optional_field_non_breaking() -> None:
     old = _base_contract()
     new_ccm = copy.deepcopy(old.ccm)
-    new_ccm.schema.fields.append(
+    new_ccm.contract_schema.fields.append(
         CanonicalContract.model_validate(
             {
                 "contract_id": "x",
@@ -34,7 +34,7 @@ def test_add_optional_field_non_breaking() -> None:
                     ]
                 },
             }
-        ).schema.fields[0]
+        ).contract_schema.fields[0]
     )
     new = DataContract.from_ccm(new_ccm)
 
@@ -46,7 +46,7 @@ def test_add_optional_field_non_breaking() -> None:
 def test_remove_required_field_breaking() -> None:
     old = _base_contract()
     new_ccm = copy.deepcopy(old.ccm)
-    new_ccm.schema.fields = [f for f in new_ccm.schema.fields if f.name != "customer_id"]
+    new_ccm.contract_schema.fields = [f for f in new_ccm.contract_schema.fields if f.name != "customer_id"]
     new = DataContract.from_ccm(new_ccm)
 
     diff = old.diff(new)
@@ -57,7 +57,7 @@ def test_remove_required_field_breaking() -> None:
 def test_type_change_breaking() -> None:
     old = _base_contract()
     new_ccm = copy.deepcopy(old.ccm)
-    customer_id = next(f for f in new_ccm.schema.fields if f.name == "customer_id")
+    customer_id = next(f for f in new_ccm.contract_schema.fields if f.name == "customer_id")
     customer_id.logical_type = LogicalType.INTEGER
     new = DataContract.from_ccm(new_ccm)
 
@@ -69,6 +69,6 @@ def test_type_change_breaking() -> None:
 def test_is_breaking_change_helper() -> None:
     old = _base_contract()
     new_ccm = copy.deepcopy(old.ccm)
-    new_ccm.schema.fields = [f for f in new_ccm.schema.fields if f.name != "event_id"]
+    new_ccm.contract_schema.fields = [f for f in new_ccm.contract_schema.fields if f.name != "event_id"]
     new = DataContract.from_ccm(new_ccm)
     assert old.is_breaking_change(new) is True

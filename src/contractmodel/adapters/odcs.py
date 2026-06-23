@@ -13,11 +13,10 @@ from contractmodel.core.ccm import (
 )
 from contractmodel.core.constraints import FieldConstraints
 from contractmodel.core.types import ContractStatus, LogicalType
+from contractmodel.errors import OdcsImportError
 
 _ODCS_TOP_LEVEL_KEYS = frozenset(
     {
-        "apiVersion",
-        "kind",
         "id",
         "name",
         "version",
@@ -40,6 +39,36 @@ _ODCS_FIELD_KEYS = frozenset(
         "default",
         "examples",
         "aliases",
+        "minValue",
+        "maxValue",
+        "minLength",
+        "maxLength",
+        "pattern",
+        "unique",
+        "min_value",
+        "max_value",
+        "min_length",
+        "max_length",
+    }
+)
+
+_ODCS_FIELD_RESERVED = frozenset(
+    {
+        "name",
+        "logicalType",
+        "required",
+        "nullable",
+        "description",
+        "enum",
+        "default",
+        "examples",
+        "aliases",
+        "minValue",
+        "maxValue",
+        "minLength",
+        "maxLength",
+        "pattern",
+        "unique",
     }
 )
 
@@ -53,15 +82,25 @@ def is_odcs_document(data: dict[str, Any]) -> bool:
 
 def import_odcs(data: dict[str, Any]) -> CanonicalContract:
     """Convert an ODCS document dict into a CanonicalContract."""
+    _validate_required_keys(data, ["id", "name", "version"])
+
     extensions: dict[str, Any] = {
         k: v for k, v in data.items() if k not in _ODCS_TOP_LEVEL_KEYS
     }
+    if "apiVersion" in data:
+        extensions.setdefault("apiVersion", data["apiVersion"])
+    if "kind" in data:
+        extensions.setdefault("kind", data["kind"])
 
     ownership = _import_ownership(data.get("owner"))
     schema = _import_schema(data.get("schema", []))
 
     status_raw = data.get("status", "draft")
-    status = ContractStatus(str(status_raw).lower())
+    try:
+        status = ContractStatus(str(status_raw).lower())
+    except ValueError as exc:
+        msg = f"Invalid contract status: {status_raw}"
+        raise OdcsImportError(msg) from exc
 
     return CanonicalContract(
         contract_id=data["id"],
@@ -77,13 +116,14 @@ def import_odcs(data: dict[str, Any]) -> CanonicalContract:
 
 def export_odcs(contract: CanonicalContract) -> dict[str, Any]:
     """Convert a CanonicalContract into an ODCS document dict."""
-    result: dict[str, Any] = {
-        "apiVersion": contract.extensions.get("apiVersion", "v3.0.0"),
-        "kind": contract.extensions.get("kind", "DataContract"),
-        "id": contract.contract_id,
-        "name": contract.name,
-        "version": contract.version,
-    }
+    result: dict[str, Any] = dict(contract.extensions)
+
+    result["apiVersion"] = result.get("apiVersion", "v3.0.0")
+    result["kind"] = result.get("kind", "DataContract")
+    result["id"] = contract.contract_id
+    result["name"] = contract.name
+    result["version"] = contract.version
+    result["status"] = contract.status.value
 
     if contract.description is not None:
         result["description"] = contract.description
@@ -91,13 +131,16 @@ def export_odcs(contract: CanonicalContract) -> dict[str, Any]:
     if contract.ownership is not None:
         result["owner"] = _export_ownership(contract.ownership)
 
-    result["schema"] = [_export_field(field) for field in contract.schema.fields]
-
-    for key, value in contract.extensions.items():
-        if key not in {"apiVersion", "kind"}:
-            result[key] = value
+    result["schema"] = [_export_field(field) for field in contract.contract_schema.fields]
 
     return result
+
+
+def _validate_required_keys(data: dict[str, Any], keys: list[str]) -> None:
+    missing = [key for key in keys if key not in data]
+    if missing:
+        msg = f"ODCS document missing required keys: {', '.join(missing)}"
+        raise OdcsImportError(msg)
 
 
 def _import_ownership(owner_data: Any) -> Ownership | None:
@@ -132,12 +175,16 @@ def _export_ownership(ownership: Ownership) -> dict[str, Any]:
 def _import_schema(schema_data: Any) -> ContractSchema:
     if not isinstance(schema_data, list):
         msg = "ODCS schema must be a list of fields"
-        raise ValueError(msg)
+        raise OdcsImportError(msg)
 
     return ContractSchema(fields=[_import_field(item) for item in schema_data])
 
 
 def _import_field(field_data: dict[str, Any]) -> ContractField:
+    if "name" not in field_data:
+        msg = "ODCS field is missing required key 'name'"
+        raise OdcsImportError(msg)
+
     extensions = {k: v for k, v in field_data.items() if k not in _ODCS_FIELD_KEYS}
 
     logical_type_raw = field_data.get("logicalType") or field_data.get("logical_type", "string")
@@ -145,10 +192,14 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
 
     if enum_values:
         logical_type = LogicalType.ENUM
-        constraints = FieldConstraints(enum_values=list(enum_values))
+        constraints = _import_constraints(field_data, enum_values=list(enum_values))
     else:
-        logical_type = LogicalType(str(logical_type_raw).lower())
-        constraints = FieldConstraints()
+        try:
+            logical_type = LogicalType(str(logical_type_raw).lower())
+        except ValueError as exc:
+            msg = f"Invalid logical type: {logical_type_raw}"
+            raise OdcsImportError(msg) from exc
+        constraints = _import_constraints(field_data)
 
     return ContractField(
         name=field_data["name"],
@@ -161,6 +212,22 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
         examples=field_data.get("examples", []),
         constraints=constraints,
         extensions=extensions,
+    )
+
+
+def _import_constraints(
+    field_data: dict[str, Any],
+    *,
+    enum_values: list[Any] | None = None,
+) -> FieldConstraints:
+    return FieldConstraints(
+        min_value=field_data.get("minValue", field_data.get("min_value")),
+        max_value=field_data.get("maxValue", field_data.get("max_value")),
+        min_length=field_data.get("minLength", field_data.get("min_length")),
+        max_length=field_data.get("maxLength", field_data.get("max_length")),
+        pattern=field_data.get("pattern"),
+        unique=bool(field_data.get("unique", False)),
+        enum_values=enum_values,
     )
 
 
@@ -187,5 +254,22 @@ def _export_field(field: ContractField) -> dict[str, Any]:
     if field.aliases:
         result["aliases"] = field.aliases
 
-    result.update(field.extensions)
+    constraints = field.constraints
+    if constraints.min_value is not None:
+        result["minValue"] = constraints.min_value
+    if constraints.max_value is not None:
+        result["maxValue"] = constraints.max_value
+    if constraints.min_length is not None:
+        result["minLength"] = constraints.min_length
+    if constraints.max_length is not None:
+        result["maxLength"] = constraints.max_length
+    if constraints.pattern is not None:
+        result["pattern"] = constraints.pattern
+    if constraints.unique:
+        result["unique"] = True
+
+    for key, value in field.extensions.items():
+        if key not in _ODCS_FIELD_RESERVED:
+            result[key] = value
+
     return result

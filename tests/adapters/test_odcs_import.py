@@ -24,12 +24,12 @@ def test_import_customer_events_odcs() -> None:
     assert contract.ownership.team == "customer-platform"
     assert contract.ownership.contacts[0].email == "data-team@example.com"
 
-    field_names = [field.name for field in contract.schema.fields]
+    field_names = [field.name for field in contract.contract_schema.fields]
     assert field_names == ["event_id", "customer_id", "event_timestamp", "event_type"]
 
-    event_id = contract.schema.fields[0]
+    event_id = contract.contract_schema.fields[0]
     assert event_id.logical_type == LogicalType.UUID
 
-    event_type = contract.schema.fields[3]
+    event_type = contract.contract_schema.fields[3]
     assert event_type.logical_type == LogicalType.ENUM
     assert event_type.constraints.enum_values == ["created", "updated", "deleted"]

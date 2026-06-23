@@ -49,20 +49,28 @@ def validate_pandas(
     mode: ValidationMode = ValidationMode.STRICT,
 ) -> ValidationResult:
     """Validate a Pandas DataFrame against a contract."""
-    _import_pandas()
+    pd = _import_pandas()
+    if not isinstance(df, pd.DataFrame):
+        msg = "Expected a pandas.DataFrame"
+        raise TypeError(msg)
+
     errors = _schema_errors(contract, list(df.columns), mode)
-    records = df.to_dict(orient="records")
-    result = validate_records(contract, records, mode=mode)
+    normalized = df.where(pd.notna(df), None)
+    result = validate_records(
+        contract,
+        normalized.to_dict(orient="records"),
+        mode=mode,
+        skip_missing_field_errors=True,
+    )
     errors.extend(result.errors)
     success = len(errors) == 0
     return ValidationResult(
         success=success,
         error_count=len(errors),
+        warning_count=result.warning_count,
         errors=errors,
-        metrics={
-            **result.metrics,
-            "rows_total": len(df),
-        },
+        warnings=result.warnings,
+        metrics={**result.metrics, "rows_total": len(df)},
     )
 
 
@@ -79,18 +87,21 @@ def validate_polars(
         raise TypeError(msg)
 
     errors = _schema_errors(contract, df.columns, mode)
-    records = df.to_dicts()
-    result = validate_records(contract, records, mode=mode)
+    result = validate_records(
+        contract,
+        df.to_dicts(),
+        mode=mode,
+        skip_missing_field_errors=True,
+    )
     errors.extend(result.errors)
     success = len(errors) == 0
     return ValidationResult(
         success=success,
         error_count=len(errors),
+        warning_count=result.warning_count,
         errors=errors,
-        metrics={
-            **result.metrics,
-            "rows_total": len(df),
-        },
+        warnings=result.warnings,
+        metrics={**result.metrics, "rows_total": len(df)},
     )
 
 
@@ -100,10 +111,10 @@ def _schema_errors(
     mode: ValidationMode,
 ) -> list[ValidationErrorDetail]:
     errors: list[ValidationErrorDetail] = []
-    contract_fields = {field.name for field in contract.schema.fields}
+    contract_fields = {field.name for field in contract.contract_schema.fields}
     column_set = set(columns)
 
-    for field in contract.schema.fields:
+    for field in contract.contract_schema.fields:
         if field.required and field.name not in column_set:
             errors.append(
                 ValidationErrorDetail(

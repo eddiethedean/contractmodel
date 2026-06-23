@@ -25,7 +25,7 @@ def _minimal_contract_data() -> dict:
 
 def test_valid_minimal_contract() -> None:
     contract = CanonicalContract.model_validate(_minimal_contract_data())
-    assert contract.schema.fields[0].name == "id"
+    assert contract.contract_schema.fields[0].name == "id"
 
 
 def test_missing_required_top_level_field() -> None:
@@ -64,7 +64,7 @@ def test_nested_children() -> None:
             },
         }
     )
-    address = contract.schema.fields[0]
+    address = contract.contract_schema.fields[0]
     assert address.logical_type == LogicalType.OBJECT
     assert len(address.children) == 1
     assert address.children[0].name == "city"

@@ -1,0 +1,31 @@
+contract_id: nested-example
+name: Nested Example
+version: 1.0.0
+description: Example contract with nested objects and quality rules.
+schema:
+  primary_key:
+    - event_id
+  fields:
+    - name: event_id
+      logical_type: uuid
+      required: true
+    - name: customer
+      logical_type: object
+      required: true
+      children:
+        - name: id
+          logical_type: string
+          required: true
+        - name: email
+          logical_type: email
+          required: false
+          nullable: true
+quality:
+  rules:
+    - name: row_count
+      type: completeness
+      config:
+        min_rows: 1
+semantics:
+  namespaces:
+    ex: http://example.org/

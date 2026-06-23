@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from contractmodel.core.constraints import FieldConstraints, SchemaConstraint
 from contractmodel.core.types import ContractKind, ContractStatus, LogicalType
@@ -127,9 +127,17 @@ class ContractSchema(BaseModel):
     indexes: list[IndexSpec] = Field(default_factory=list)
     constraints: list[SchemaConstraint] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def validate_unique_field_names(self) -> ContractSchema:
+        names = [field.name for field in self.fields]
+        if len(names) != len(set(names)):
+            msg = "Duplicate field names are not allowed in schema"
+            raise ValueError(msg)
+        return self
+
 
 class CanonicalContract(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     contract_id: str
     name: str
@@ -139,7 +147,7 @@ class CanonicalContract(BaseModel):
     status: ContractStatus = ContractStatus.DRAFT
 
     ownership: Ownership | None = None
-    schema: ContractSchema  # type: ignore[assignment]
+    contract_schema: ContractSchema = Field(alias="schema")
     quality: QualitySpec | None = None
     service_level: ServiceLevelSpec | None = None
     lineage: LineageSpec | None = None

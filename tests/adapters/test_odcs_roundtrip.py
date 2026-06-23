@@ -25,8 +25,8 @@ def test_odcs_roundtrip_preserves_identity() -> None:
     assert roundtripped.description == contract.description
 
     for original_field, roundtripped_field in zip(
-        contract.schema.fields,
-        roundtripped.schema.fields,
+        contract.contract_schema.fields,
+        roundtripped.contract_schema.fields,
         strict=True,
     ):
         assert original_field.name == roundtripped_field.name
@@ -48,5 +48,5 @@ def test_odcs_enum_field_roundtrip() -> None:
     assert event_type["enum"] == ["created", "updated", "deleted"]
 
     roundtripped = import_odcs(exported)
-    field = next(f for f in roundtripped.schema.fields if f.name == "event_type")
+    field = next(f for f in roundtripped.contract_schema.fields if f.name == "event_type")
     assert field.logical_type == LogicalType.ENUM

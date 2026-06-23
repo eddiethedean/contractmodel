@@ -35,11 +35,23 @@ def is_constraint_tightening(old: FieldConstraints, new: FieldConstraints) -> bo
         return True
     if new.unique and not old.unique:
         return True
-    return bool(
-        old.enum_values
-        and new.enum_values
-        and set(new.enum_values) < set(old.enum_values)
-    )
+    if new.pattern and not old.pattern:
+        return True
+    if new.immutable and not old.immutable:
+        return True
+    if new.allowed_values and (
+        not old.allowed_values or set(new.allowed_values) < set(old.allowed_values)
+    ):
+        return True
+    if new.disallowed_values and (
+        not old.disallowed_values or set(new.disallowed_values) > set(old.disallowed_values)
+    ):
+        return True
+    if old.enum_values and not new.enum_values:
+        return True
+    if old.enum_values and new.enum_values and set(new.enum_values) < set(old.enum_values):
+        return True
+    return bool(not old.enum_values and new.enum_values)
 
 
 def is_constraint_loosening(old: FieldConstraints, new: FieldConstraints) -> bool:
@@ -54,11 +66,11 @@ def is_constraint_loosening(old: FieldConstraints, new: FieldConstraints) -> boo
         return True
     if old.unique and not new.unique:
         return True
-    return bool(
-        old.enum_values
-        and new.enum_values
-        and set(new.enum_values) > set(old.enum_values)
-    )
+    if old.pattern and not new.pattern:
+        return True
+    if old.immutable and not new.immutable:
+        return True
+    return bool(old.enum_values and new.enum_values and set(new.enum_values) > set(old.enum_values))
 
 
 def classify_field_change(
@@ -68,11 +80,16 @@ def classify_field_change(
     mode: CompatibilityMode = CompatibilityMode.BACKWARD,
 ) -> tuple[list[str], list[str]]:
     """Classify a field change as breaking and/or non-breaking messages."""
-    del mode
     breaking: list[str] = []
     non_breaking: list[str] = []
 
-    if is_type_incompatible(old_field.logical_type, new_field.logical_type):
+    if mode == CompatibilityMode.NONE:
+        if old_field != new_field:
+            breaking.append(f"Field '{old_field.name}' changed")
+        return breaking, non_breaking
+
+    type_changed = is_type_incompatible(old_field.logical_type, new_field.logical_type)
+    if type_changed and mode != CompatibilityMode.FORWARD:
         breaking.append(
             f"Field '{old_field.name}' type changed from {old_field.logical_type.value} "
             f"to {new_field.logical_type.value}"
@@ -84,6 +101,12 @@ def classify_field_change(
     if not old_field.required and new_field.required:
         breaking.append(f"Field '{old_field.name}' changed from optional to required")
 
+    if not old_field.nullable and new_field.nullable:
+        non_breaking.append(f"Field '{old_field.name}' changed from non-nullable to nullable")
+
+    if old_field.required and not new_field.required:
+        non_breaking.append(f"Field '{old_field.name}' changed from required to optional")
+
     if is_constraint_tightening(old_field.constraints, new_field.constraints):
         breaking.append(f"Field '{old_field.name}' constraints were tightened")
 
@@ -93,12 +116,64 @@ def classify_field_change(
     if old_field.description != new_field.description and new_field.description:
         non_breaking.append(f"Field '{old_field.name}' description updated")
 
+    if set(new_field.examples) > set(old_field.examples):
+        non_breaking.append(f"Field '{old_field.name}' examples added")
+
     if set(new_field.aliases) > set(old_field.aliases):
         non_breaking.append(f"Field '{old_field.name}' aliases added")
+
+    if new_field.semantic and not old_field.semantic:
+        non_breaking.append(f"Field '{old_field.name}' semantic mapping added")
 
     return breaking, non_breaking
 
 
-def is_removed_field_breaking(field: ContractField) -> bool:
+def is_removed_field_breaking(field: ContractField, *, mode: CompatibilityMode) -> bool:
     """Return True when removing a field is a breaking change."""
+    if mode == CompatibilityMode.FORWARD:
+        return False
+    if mode == CompatibilityMode.NONE:
+        return True
     return field.required and not field.nullable
+
+
+def is_added_field_breaking(field: ContractField, *, mode: CompatibilityMode) -> bool:
+    """Return True when adding a field is a breaking change."""
+    if mode == CompatibilityMode.NONE:
+        return True
+    if mode == CompatibilityMode.FORWARD:
+        return field.required and not field.nullable
+    if mode == CompatibilityMode.BACKWARD:
+        return field.required and not field.nullable
+    if mode == CompatibilityMode.FULL:
+        return field.required and not field.nullable
+    return False
+
+
+def detect_renames(
+    removed: dict[str, ContractField],
+    added: dict[str, ContractField],
+) -> tuple[set[str], set[str], list[str]]:
+    """Pair removed/added fields by aliases.
+
+    Returns paired removed, paired added, and rename messages.
+    """
+    paired_removed: set[str] = set()
+    paired_added: set[str] = set()
+    rename_breaking: list[str] = []
+
+    for old_name, old_field in removed.items():
+        for new_name, new_field in added.items():
+            if new_name in paired_added:
+                continue
+            old_aliases = set(old_field.aliases)
+            new_aliases = set(new_field.aliases)
+            if new_name in old_aliases or old_name in new_aliases:
+                paired_removed.add(old_name)
+                paired_added.add(new_name)
+                rename_breaking.append(
+                    f"Field '{old_name}' renamed to '{new_name}' via alias"
+                )
+                break
+
+    return paired_removed, paired_added, rename_breaking

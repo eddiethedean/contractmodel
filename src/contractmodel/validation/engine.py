@@ -10,8 +10,13 @@ from pydantic import ValidationError
 
 from contractmodel.adapters.pydantic import generate_pydantic_model
 from contractmodel.core.ccm import CanonicalContract
-from contractmodel.core.result import ValidationErrorDetail, ValidationResult
+from contractmodel.core.result import (
+    ValidationErrorDetail,
+    ValidationResult,
+    ValidationWarningDetail,
+)
 from contractmodel.core.types import ValidationMode
+from contractmodel.validation.quality import validate_quality_rules
 
 
 def validate_record(
@@ -19,14 +24,27 @@ def validate_record(
     record: Mapping[str, Any],
     *,
     mode: ValidationMode = ValidationMode.STRICT,
+    skip_missing_field_errors: bool = False,
 ) -> ValidationResult:
     """Validate a single record against a contract."""
-    model = generate_pydantic_model(contract)
     errors: list[ValidationErrorDetail] = []
+    warnings: list[ValidationWarningDetail] = []
 
-    if mode == ValidationMode.STRICT:
-        extra = set(record.keys()) - set(model.model_fields.keys())
-        for key in sorted(extra):
+    if mode == ValidationMode.QUALITY_ONLY:
+        return validate_quality_rules(contract, [record])
+
+    model = generate_pydantic_model(
+        contract,
+        schema_only=mode == ValidationMode.SCHEMA_ONLY,
+        forbid_extra=mode == ValidationMode.STRICT,
+    )
+    field_names = set(model.model_fields.keys())
+    payload = dict(record)
+
+    if mode == ValidationMode.PERMISSIVE:
+        payload = {k: v for k, v in payload.items() if k in field_names}
+    elif mode == ValidationMode.STRICT:
+        for key in sorted(set(record.keys()) - field_names):
             errors.append(
                 ValidationErrorDetail(
                     code="CM_SCHEMA_EXTRA_FIELD",
@@ -37,15 +55,28 @@ def validate_record(
             )
 
     try:
-        model.model_validate(dict(record))
+        model.model_validate(payload)
     except ValidationError as exc:
-        errors.extend(_pydantic_errors_to_details(exc))
+        reported_extras = {e.field for e in errors if e.code == "CM_SCHEMA_EXTRA_FIELD"}
+        for detail in _pydantic_errors_to_details(exc):
+            if skip_missing_field_errors and detail.code == "CM_SCHEMA_MISSING_FIELD":
+                continue
+            if detail.code == "CM_SCHEMA_EXTRA_FIELD" and detail.field in reported_extras:
+                continue
+            errors.append(detail)
+
+    if mode != ValidationMode.SCHEMA_ONLY and contract.quality is not None:
+        quality_result = validate_quality_rules(contract, [record])
+        errors.extend(quality_result.errors)
+        warnings.extend(quality_result.warnings)
 
     success = len(errors) == 0
     return ValidationResult(
         success=success,
         error_count=len(errors),
+        warning_count=len(warnings),
         errors=errors,
+        warnings=warnings,
         metrics={
             "records_total": 1,
             "records_valid": 1 if success else 0,
@@ -59,29 +90,40 @@ def validate_records(
     records: Iterable[Mapping[str, Any]],
     *,
     mode: ValidationMode = ValidationMode.STRICT,
+    skip_missing_field_errors: bool = False,
 ) -> ValidationResult:
     """Validate multiple records against a contract."""
+    record_list = list(records)
     all_errors: list[ValidationErrorDetail] = []
-    total = 0
+    all_warnings: list[ValidationWarningDetail] = []
+    total = len(record_list)
     invalid = 0
 
-    for index, record in enumerate(records):
-        result = validate_record(contract, record, mode=mode)
+    for index, record in enumerate(record_list):
+        result = validate_record(
+            contract,
+            record,
+            mode=mode,
+            skip_missing_field_errors=skip_missing_field_errors,
+        )
         for error in result.errors:
             all_errors.append(error.model_copy(update={"row": index}))
-        total += 1
+        for warning in result.warnings:
+            all_warnings.append(warning.model_copy(update={"row": index}))
         if not result.success:
             invalid += 1
 
-    unique_fields = {f.name for f in contract.schema.fields if f.constraints.unique}
+    unique_fields = {f.name for f in contract.contract_schema.fields if f.constraints.unique}
     if unique_fields and total > 0:
-        all_errors.extend(_check_uniqueness(contract, records, unique_fields))
+        all_errors.extend(_check_uniqueness(record_list, unique_fields))
 
     success = len(all_errors) == 0
     return ValidationResult(
         success=success,
         error_count=len(all_errors),
+        warning_count=len(all_warnings),
         errors=all_errors,
+        warnings=all_warnings,
         metrics={
             "records_total": total,
             "records_valid": total - invalid,
@@ -98,11 +140,41 @@ def validate_json(
     mode: ValidationMode = ValidationMode.STRICT,
 ) -> ValidationResult:
     """Validate JSON data against a contract."""
-    parsed = json.loads(data) if isinstance(data, (str, bytes)) else data
+    try:
+        parsed = json.loads(data) if isinstance(data, (str, bytes)) else data
+    except json.JSONDecodeError as exc:
+        return ValidationResult(
+            success=False,
+            error_count=1,
+            errors=[
+                ValidationErrorDetail(
+                    code="CM_RUNTIME_ERROR",
+                    message=f"Invalid JSON: {exc.msg}",
+                )
+            ],
+        )
 
     if isinstance(parsed, list):
-        records = [item for item in parsed if isinstance(item, dict)]
-        return validate_records(contract, records, mode=mode)
+        errors: list[ValidationErrorDetail] = []
+        records: list[Mapping[str, Any]] = []
+        for index, item in enumerate(parsed):
+            if isinstance(item, dict):
+                records.append(item)
+            else:
+                errors.append(
+                    ValidationErrorDetail(
+                        code="CM_RUNTIME_ERROR",
+                        message="JSON array items must be objects",
+                        row=index,
+                        value=item,
+                    )
+                )
+        result = validate_records(contract, records, mode=mode)
+        result.errors = errors + result.errors
+        result.error_count = len(result.errors)
+        result.success = result.error_count == 0
+        result.metrics["records_total"] = len(parsed)
+        return result
 
     if isinstance(parsed, dict):
         return validate_record(contract, parsed, mode=mode)
@@ -144,8 +216,8 @@ def _error_type_to_code(error_type: str) -> str:
         "greater_than_equal": "CM_CONSTRAINT_MIN_VALUE",
         "less_than_equal": "CM_CONSTRAINT_MAX_VALUE",
         "string_pattern_mismatch": "CM_CONSTRAINT_PATTERN",
-        "string_too_short": "CM_CONSTRAINT_MIN_VALUE",
-        "string_too_long": "CM_CONSTRAINT_MAX_VALUE",
+        "string_too_short": "CM_CONSTRAINT_MIN_LENGTH",
+        "string_too_long": "CM_CONSTRAINT_MAX_LENGTH",
     }
     if error_type in mapping:
         return mapping[error_type]
@@ -157,17 +229,17 @@ def _error_type_to_code(error_type: str) -> str:
 
 
 def _check_uniqueness(
-    contract: CanonicalContract,
-    records: Iterable[Mapping[str, Any]],
+    records: list[Mapping[str, Any]],
     unique_fields: set[str],
 ) -> list[ValidationErrorDetail]:
-    del contract
     errors: list[ValidationErrorDetail] = []
     seen: dict[str, set[Any]] = {field: set() for field in unique_fields}
 
     for index, record in enumerate(records):
         for field in unique_fields:
             value = record.get(field)
+            if value is None:
+                continue
             if value in seen[field]:
                 errors.append(
                     ValidationErrorDetail(

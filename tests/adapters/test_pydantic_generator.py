@@ -117,6 +117,6 @@ def test_from_pydantic_roundtrip() -> None:
 
     contract = contract_from_pydantic(SampleModel, name="Sample")
     assert contract.name == "Sample"
-    assert len(contract.schema.fields) == 2
-    assert contract.schema.fields[0].logical_type == LogicalType.STRING
-    assert contract.schema.fields[1].logical_type == LogicalType.INTEGER
+    assert len(contract.contract_schema.fields) == 2
+    assert contract.contract_schema.fields[0].logical_type == LogicalType.STRING
+    assert contract.contract_schema.fields[1].logical_type == LogicalType.INTEGER

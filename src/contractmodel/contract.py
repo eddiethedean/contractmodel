@@ -13,10 +13,15 @@ from pydantic import BaseModel
 from contractmodel.adapters.odcs import export_odcs, import_odcs, is_odcs_document
 from contractmodel.adapters.pydantic import contract_from_pydantic, generate_pydantic_model
 from contractmodel.core.ccm import CanonicalContract, ContractField
-from contractmodel.core.result import ValidationResult
+from contractmodel.core.result import ValidationResult, ValidationWarningDetail
 from contractmodel.core.types import CompatibilityMode, ValidationMode
 from contractmodel.diff.engine import ContractDiff, diff_contracts
-from contractmodel.export.markdown import export_json_schema, export_markdown
+from contractmodel.export.json_schema import export_json_schema
+from contractmodel.export.markdown import export_markdown
+from contractmodel.export.openapi import export_openapi
+from contractmodel.semantic.owl import export_owl
+from contractmodel.semantic.rdf import export_rdf
+from contractmodel.semantic.shacl import export_shacl
 from contractmodel.validation import dataframe as dataframe_validation
 from contractmodel.validation import engine as validation_engine
 
@@ -24,8 +29,14 @@ from contractmodel.validation import engine as validation_engine
 class DataContract:
     """User-facing wrapper around the Canonical Contract Model."""
 
-    def __init__(self, ccm: CanonicalContract) -> None:
+    def __init__(
+        self,
+        ccm: CanonicalContract,
+        *,
+        import_warnings: list[ValidationWarningDetail] | None = None,
+    ) -> None:
         self._ccm = ccm
+        self._import_warnings = import_warnings or []
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> DataContract:
@@ -35,7 +46,7 @@ class DataContract:
             msg = "Contract YAML must contain a mapping"
             raise ValueError(msg)
         if is_odcs_document(data):
-            return cls(import_odcs(data))
+            return cls.from_odcs_dict(data)
         return cls(CanonicalContract.model_validate(data))
 
     @classmethod
@@ -46,7 +57,7 @@ class DataContract:
             msg = "Contract JSON must contain an object"
             raise ValueError(msg)
         if is_odcs_document(data):
-            return cls(import_odcs(data))
+            return cls.from_odcs_dict(data)
         return cls(CanonicalContract.model_validate(data))
 
     @classmethod
@@ -56,7 +67,23 @@ class DataContract:
         if not isinstance(data, dict):
             msg = "ODCS document must be a mapping"
             raise ValueError(msg)
-        return cls(import_odcs(data))
+        return cls.from_odcs_dict(data)
+
+    @classmethod
+    def from_odcs_dict(cls, data: dict[str, Any]) -> DataContract:
+        warnings: list[ValidationWarningDetail] = []
+        owner = data.get("owner")
+        if isinstance(owner, dict) and owner.get("contact"):
+            warnings.append(
+                ValidationWarningDetail(
+                    code="ODCS_LOSSY_IMPORT",
+                    message=(
+                        "ODCS contact imported as ownership contact list; "
+                        "export uses first contact only"
+                    ),
+                )
+            )
+        return cls(import_odcs(data), import_warnings=warnings)
 
     @classmethod
     def from_pydantic(cls, model: type[BaseModel], *, name: str | None = None) -> DataContract:
@@ -71,6 +98,10 @@ class DataContract:
         return self._ccm
 
     @property
+    def import_warnings(self) -> list[ValidationWarningDetail]:
+        return self._import_warnings
+
+    @property
     def name(self) -> str:
         return self._ccm.name
 
@@ -80,7 +111,7 @@ class DataContract:
 
     @property
     def fields(self) -> list[ContractField]:
-        return self._ccm.schema.fields
+        return self._ccm.contract_schema.fields
 
     def to_pydantic(self, *, class_name: str | None = None) -> type[BaseModel]:
         return generate_pydantic_model(self._ccm, class_name=class_name)
@@ -165,14 +196,17 @@ class DataContract:
     def to_json_schema(self) -> dict[str, Any]:
         return export_json_schema(self._ccm)
 
+    def to_openapi(self) -> dict[str, Any]:
+        return export_openapi(self._ccm)
+
     def to_markdown(self) -> str:
         return export_markdown(self._ccm)
 
     def to_rdf(self) -> str:
-        return f"# RDF export stub for {self._ccm.contract_id}\n"
+        return export_rdf(self._ccm)
 
     def to_shacl(self) -> str:
-        return f"# SHACL export stub for {self._ccm.contract_id}\n"
+        return export_shacl(self._ccm)
 
     def to_owl(self) -> str:
-        return f"# OWL export stub for {self._ccm.contract_id}\n"
+        return export_owl(self._ccm)
