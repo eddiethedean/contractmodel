@@ -191,4 +191,4 @@ Every format adapter must:
 - [ODCS mapping spec](../specifications/02-odcs-pydantic-mapping.md) — reference adapter design
 - [Implementation roadmap](01-implementation-roadmap.md) — delivery phases 0–11
 - [GitHub epics](02-github-epics-and-issues.md) — tracking epics per format group
-- [STABILITY.md](../../STABILITY.md) — API stability tiers
+- [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) — API stability tiers

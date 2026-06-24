@@ -8,6 +8,31 @@ version = "0.1.2"
 description = "Python-native data contracts powered by a Canonical Contract Model and Pydantic."
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Odo Matthews", email = "odosmatthews@gmail.com" }]
+keywords = [
+  "data-contracts",
+  "data-contract",
+  "odcs",
+  "open-data-contract-standard",
+  "pydantic",
+  "validation",
+  "json-schema",
+  "data-quality",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
+]
 dependencies = [
   "pydantic>=2.7",
   "pyyaml>=6.0",
@@ -28,6 +53,13 @@ all = [
   "rdflib>=7.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/eddiethedean/contractmodel"
+Repository = "https://github.com/eddiethedean/contractmodel"
+Documentation = "https://eddiethedean.github.io/contractmodel/"
+Changelog = "https://github.com/eddiethedean/contractmodel/blob/main/CHANGELOG.md"
+Issues = "https://github.com/eddiethedean/contractmodel/issues"
+
 [project.scripts]
 contract = "contractmodel.cli.app:app"
 
@@ -39,6 +71,8 @@ dev = [
   "mypy>=1.11",
   "pre-commit>=3.8",
   "types-PyYAML",
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
 ]
 
 [tool.ruff]

@@ -48,4 +48,5 @@ Thumbs.db
 
 # Generated artifacts
 models.py
+site/
 *.log

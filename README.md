@@ -4,8 +4,37 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/eddiethedean/contractmodel/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/contractmodel/actions/workflows/ci.yml)
+[![Stability: 0.1.x](https://img.shields.io/badge/stability-0.1.x-orange.svg)](STABILITY.md)
 
-Python-native data contracts built on a **Canonical Contract Model (CCM)** and **Pydantic V2**. Import contracts from ODCS, generate typed models, validate records and DataFrames, detect breaking changes, and export to JSON Schema, OpenAPI, Markdown, RDF, SHACL, and OWL — all through one stable internal representation.
+**Python-native data contracts** — import from [ODCS](https://github.com/bitol-io/open-data-contract-standard) (Open Data Contract Standard), validate with Pydantic, diff versions, and export to JSON Schema, OpenAPI, and more.
+
+Also known as: `pip install contractmodel` · CLI command `contract`
+
+## Who this is for
+
+- **Data platform engineers** who want ODCS YAML contracts to drive runtime validation in Python pipelines
+- **API and analytics teams** who need typed Pydantic models generated from a shared contract, not hand-maintained duplicates
+- **Governance-minded teams** who want breaking-change detection when contracts evolve
+
+## Glossary
+
+| Term | Meaning |
+|------|---------|
+| **CCM** | Canonical Contract Model — ContractModel's internal, format-agnostic contract representation |
+| **ODCS** | Open Data Contract Standard — YAML contract format from [Bitol](https://bitol.io/) |
+| **DataContract** | Main Python class — load, validate, diff, and export contracts |
+| **`contract`** | CLI installed with the package (`contract validate`, `contract diff`, …) |
+
+## Why ContractModel?
+
+| Approach | What you get | Gap |
+|----------|--------------|-----|
+| **Pydantic alone** | Fast record validation | No ODCS import, no contract diffing, no shared governance format |
+| **Great Expectations / Soda** | Data quality suites | Not contract-first; weak ODCS/CCM round-trip |
+| **Raw ODCS tooling** | Standard YAML contracts | No unified validation, diff, and Pydantic generation in one library |
+| **ContractModel** | CCM hub: ODCS ↔ Pydantic ↔ validation ↔ diff ↔ export | 0.1.x — see [STABILITY.md](STABILITY.md) for experimental areas |
+
+> **0.1.x stability** — Core `DataContract` APIs are stable; plugins, registry publish, and some quality rules are experimental. See [STABILITY.md](STABILITY.md) before adopting in production.
 
 ## Features
 
@@ -39,10 +68,13 @@ Requires Python 3.10+. The `contract` CLI is included in the base install.
 
 ## Quick start
 
+Works after `pip install` — examples ship inside the package:
+
 ```python
 from contractmodel import DataContract, ValidationMode
+from contractmodel.examples import load_example
 
-contract = DataContract.from_odcs("examples/customer_events.odcs.yaml")
+contract = load_example("customer_events.odcs.yaml")
 CustomerEvent = contract.to_pydantic()
 
 result = contract.validate_record(
@@ -58,10 +90,14 @@ result = contract.validate_record(
 print(result.success)  # True
 ```
 
+From a git clone you can also use repository paths (`examples/...`). See [examples/README.md](examples/README.md).
+
 Load a native CCM contract:
 
 ```python
-contract = DataContract.from_yaml("examples/customer_events.ccm.yaml")
+from contractmodel.examples import example_path
+
+contract = DataContract.from_yaml(example_path("customer_events.ccm.yaml"))
 ```
 
 Compare contract versions:
@@ -124,6 +160,13 @@ Run `contract doctor` to list plugin names (without loading plugin code). See [S
 
 See [SECURITY.md](SECURITY.md) for registry trust, plugin install guidance, and data file limits.
 
+## Documentation
+
+- [Docs index](docs/README.md) — tutorials, API reference, architecture
+- [Getting started tutorial](docs/tutorials/getting-started.md)
+- [Error code catalog](docs/reference/error-codes.md) — `CM_*` codes for CI and SARIF
+- [Architecture](docs/architecture/) and [format roadmap](docs/roadmap/03-data-contract-formats.md)
+
 ## Architecture
 
 All external representations flow through the CCM:
@@ -132,17 +175,18 @@ All external representations flow through the CCM:
 ODCS / YAML / JSON  →  CCM  →  Pydantic / Validation / Diff / Export
 ```
 
-The CCM is format-agnostic. Adapters handle conversion; engines operate only on the canonical model. See [`docs/architecture/`](docs/architecture/), [`docs/roadmap/03-data-contract-formats.md`](docs/roadmap/03-data-contract-formats.md), [`STABILITY.md`](STABILITY.md), and [`docs/tutorials/`](docs/tutorials/) for details.
+The CCM is format-agnostic. Adapters handle conversion; engines operate only on the canonical model.
 
 ## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, pre-commit, and PR expectations.
 
 ```bash
 git clone https://github.com/eddiethedean/contractmodel.git
 cd contractmodel
-pip install -e ".[all]" pytest pytest-cov ruff mypy
+pip install -e ".[all]" --group dev
+pre-commit install
 pytest
-ruff check src tests
-mypy src
 ```
 
 ## License

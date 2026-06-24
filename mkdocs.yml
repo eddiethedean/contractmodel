@@ -1,0 +1,57 @@
+site_name: ContractModel
+site_url: https://eddiethedean.github.io/contractmodel/
+repo_url: https://github.com/eddiethedean/contractmodel
+repo_name: eddiethedean/contractmodel
+edit_uri: edit/main/docs/
+
+exclude_docs: |
+  internal/
+  specifications/
+  roadmap/02-github-epics-and-issues.md
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Home: README.md
+  - Tutorials:
+      - Getting started: tutorials/getting-started.md
+      - CLI walkthrough: tutorials/cli-walkthrough.md
+      - Pydantic round-trip: tutorials/pydantic-roundtrip.md
+      - Diff workflow: tutorials/diff-workflow.md
+      - CI with SARIF: tutorials/ci-sarif.md
+  - Reference:
+      - API: reference/api.md
+      - Error codes: reference/error-codes.md
+      - CLI mapping: reference/cli-library-map.md
+  - Architecture:
+      - System overview: architecture/01-system-overview.md
+      - Canonical Contract Model: architecture/02-canonical-contract-model.md
+  - Roadmap:
+      - Implementation: roadmap/01-implementation-roadmap.md
+      - Data contract formats: roadmap/03-data-contract-formats.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search

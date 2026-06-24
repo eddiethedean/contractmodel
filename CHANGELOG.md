@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Package bundled examples with `contractmodel.examples` helpers (`load_example`, `example_path`)
+- Fix `nested_schema.ccm.yaml` quality rule metadata
+- Add sample data (`examples/data/`) for CLI validation demos
+- Rewrite README for newcomers (glossary, positioning, pip-install quick start)
+- Add docs index, tutorials, API reference, and CM_* error catalog
+- Add MkDocs site, CONTRIBUTING.md, CODE_OF_CONDUCT.md, and GitHub issue/PR templates
+- Add PyPI metadata (urls, license, classifiers, keywords)
+- Move `MANIFEST.json` to `docs/internal/`
+
 ## 0.1.2
 
 - Add STABILITY.md and SECURITY.md; export ValidationMode, CompatibilityMode, ValidationWarningDetail from top-level package

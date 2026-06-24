@@ -1,5 +1,6 @@
 """ContractModel — Python-native data contracts."""
 
+from contractmodel import examples as examples
 from contractmodel.contract import DataContract
 from contractmodel.core.ccm import CanonicalContract, ContractField, ContractSchema
 from contractmodel.core.result import (
@@ -20,6 +21,7 @@ __all__ = [
     "ContractModel",
     "ContractSchema",
     "DataContract",
+    "examples",
     "FieldChange",
     "NonBreakingChange",
     "ValidationErrorDetail",

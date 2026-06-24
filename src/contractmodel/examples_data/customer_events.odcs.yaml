@@ -1,0 +1,32 @@
+apiVersion: v3.0.0
+kind: DataContract
+id: customer-events
+name: Customer Events
+version: 1.0.0
+description: Contract for customer event records.
+
+owner:
+  team: customer-platform
+  contact: data-team@example.com
+
+schema:
+  - name: event_id
+    logicalType: uuid
+    required: true
+    description: Unique event identifier.
+  - name: customer_id
+    logicalType: string
+    required: true
+    description: Customer identifier.
+  - name: event_timestamp
+    logicalType: datetime
+    required: true
+    description: Event timestamp.
+  - name: event_type
+    logicalType: string
+    required: true
+    description: Event type.
+    enum:
+      - created
+      - updated
+      - deleted

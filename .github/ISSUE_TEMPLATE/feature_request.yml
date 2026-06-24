@@ -1,0 +1,39 @@
+name: feature_request
+description: Suggest an enhancement or new capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem you're solving and how ContractModel could help.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What use case is missing or painful today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: stability
+    attributes:
+      label: Stability area
+      options:
+        - label: This affects an experimental API (plugins, registry, quality rules)
+          required: false
+        - label: I have read STABILITY.md
+          required: false
