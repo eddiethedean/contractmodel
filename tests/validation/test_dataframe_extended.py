@@ -50,16 +50,10 @@ def test_validate_polars_success() -> None:
     assert result.success is True
 
 
-def test_import_pandas_missing(monkeypatch: pytest.MonkeyPatch) -> None:
-    import builtins
+def test_validate_polars_missing_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise() -> None:
+        raise OptionalDependencyError("polars")
 
-    real_import = builtins.__import__
-
-    def fake_import(name: str, *args: object, **kwargs: object) -> object:
-        if name == "pandas":
-            raise ImportError("no pandas")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", fake_import)
-    with pytest.raises(OptionalDependencyError):
-        validate_pandas(_contract(), object())
+    monkeypatch.setattr("contractmodel.validation.dataframe._import_polars", _raise)
+    with pytest.raises(OptionalDependencyError, match="polars"):
+        validate_polars(_contract(), object())

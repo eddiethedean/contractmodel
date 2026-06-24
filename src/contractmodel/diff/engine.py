@@ -198,21 +198,41 @@ def _diff_field_pair(
         new_children = {child.name: child for child in new_field.children}
         for child_name in sorted(set(old_children) | set(new_children)):
             if child_name not in old_children:
-                breaking.append(
-                    BreakingChange(
-                        code="FIELD_CHANGED",
-                        message=f"Nested field '{name}.{child_name}' was added",
-                        field=f"{name}.{child_name}",
+                child_field = new_children[child_name]
+                if is_added_field_breaking(child_field, mode=mode):
+                    breaking.append(
+                        BreakingChange(
+                            code="FIELD_CHANGED",
+                            message=f"Nested field '{name}.{child_name}' was added",
+                            field=f"{name}.{child_name}",
+                        )
                     )
-                )
+                else:
+                    non_breaking.append(
+                        NonBreakingChange(
+                            code="FIELD_CHANGED",
+                            message=f"Nested field '{name}.{child_name}' was added",
+                            field=f"{name}.{child_name}",
+                        )
+                    )
             elif child_name not in new_children:
-                breaking.append(
-                    BreakingChange(
-                        code="FIELD_CHANGED",
-                        message=f"Nested field '{name}.{child_name}' was removed",
-                        field=f"{name}.{child_name}",
+                child_field = old_children[child_name]
+                if is_removed_field_breaking(child_field, mode=mode):
+                    breaking.append(
+                        BreakingChange(
+                            code="FIELD_CHANGED",
+                            message=f"Nested field '{name}.{child_name}' was removed",
+                            field=f"{name}.{child_name}",
+                        )
                     )
-                )
+                else:
+                    non_breaking.append(
+                        NonBreakingChange(
+                            code="FIELD_CHANGED",
+                            message=f"Nested field '{name}.{child_name}' was removed",
+                            field=f"{name}.{child_name}",
+                        )
+                    )
             else:
                 _diff_field_pair(
                     f"{name}.{child_name}",

@@ -80,3 +80,15 @@ def test_contract_field_defaults() -> None:
 def test_contract_schema_requires_fields_key() -> None:
     with pytest.raises(ValidationError):
         ContractSchema.model_validate({})
+
+
+def test_schema_rejects_duplicate_field_names() -> None:
+    with pytest.raises(ValidationError, match="Duplicate field names"):
+        ContractSchema.model_validate(
+            {
+                "fields": [
+                    {"name": "id", "logical_type": "string"},
+                    {"name": "id", "logical_type": "integer"},
+                ]
+            }
+        )

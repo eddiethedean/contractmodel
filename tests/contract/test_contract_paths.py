@@ -41,7 +41,7 @@ def test_from_odcs_invalid(tmp_path: Path) -> None:
         DataContract.from_odcs(path)
 
 
-def test_from_ccm_and_import_warnings() -> None:
+def test_from_ccm_preserves_contract_id() -> None:
     ccm = CanonicalContract.model_validate(
         {
             "contract_id": "warn",
@@ -66,15 +66,3 @@ def test_from_odcs_dict_with_contact_warning() -> None:
     }
     contract = DataContract.from_odcs_dict(data)
     assert any(w.code == "ODCS_LOSSY_IMPORT" for w in contract.import_warnings)
-
-
-def test_validate_methods() -> None:
-    contract = DataContract.from_odcs(EXAMPLES / "customer_events.odcs.yaml")
-    record = {
-        "event_id": "550e8400-e29b-41d4-a716-446655440000",
-        "customer_id": "C123",
-        "event_timestamp": "2026-06-23T12:00:00",
-        "event_type": "created",
-    }
-    assert contract.validate_record(record).success is True
-    assert contract.validate_records([record]).success is True

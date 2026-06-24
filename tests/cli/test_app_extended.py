@@ -36,25 +36,38 @@ def test_init_existing_file(tmp_path: Path) -> None:
     assert result.exit_code == 3
 
 
-def test_validate_sarif_output() -> None:
+def test_validate_sarif_output(tmp_path: Path) -> None:
     contract_path = EXAMPLES_DIR / "customer_events.odcs.yaml"
-    data_path = Path(__file__).parent / "invalid.json"
+    data_path = tmp_path / "invalid.json"
     data_path.write_text(json.dumps({"event_id": "bad"}))
-    try:
-        result = runner.invoke(
-            app,
-            ["validate", str(contract_path), str(data_path), "--output", "sarif"],
-        )
-        assert result.exit_code == 1
-        assert '"version": "2.1.0"' in result.stdout
-    finally:
-        data_path.unlink(missing_ok=True)
+    result = runner.invoke(
+        app,
+        ["validate", str(contract_path), str(data_path), "--output", "sarif"],
+    )
+    assert result.exit_code == 1
+    assert '"version": "2.1.0"' in result.stdout
 
 
-def test_validate_json_output() -> None:
+def test_validate_json_output(tmp_path: Path) -> None:
     contract_path = EXAMPLES_DIR / "customer_events.odcs.yaml"
-    result = runner.invoke(app, ["validate", str(contract_path), "--output", "json"])
+    data_path = tmp_path / "data.json"
+    data_path.write_text(
+        json.dumps(
+            {
+                "event_id": "550e8400-e29b-41d4-a716-446655440000",
+                "customer_id": "C123",
+                "event_timestamp": "2026-06-23T12:00:00",
+                "event_type": "created",
+            }
+        )
+    )
+    result = runner.invoke(
+        app,
+        ["validate", str(contract_path), str(data_path), "--output", "json"],
+    )
     assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["success"] is True
 
 
 def test_validate_invalid_contract(tmp_path: Path) -> None:
@@ -137,13 +150,37 @@ def test_export_semantic_formats(tmp_path: Path) -> None:
         assert result.exit_code == 0, result.stdout
 
 
-def test_validate_fail_on_warning() -> None:
-    contract_path = EXAMPLES_DIR / "customer_events.odcs.yaml"
+def test_validate_fail_on_warning_exits_1(tmp_path: Path) -> None:
+    contract_path = tmp_path / "contract.yaml"
+    contract_path.write_text(
+        "contract_id: warn-test\n"
+        "name: Warn Test\n"
+        "version: 1.0.0\n"
+        "schema:\n"
+        "  fields:\n"
+        "    - name: id\n"
+        "      logical_type: string\n"
+        "      required: true\n"
+        "quality:\n"
+        "  rules:\n"
+        "    - name: fresh\n"
+        "      type: freshness\n"
+    )
+    data_path = tmp_path / "data.json"
+    data_path.write_text(json.dumps({"id": "1"}))
+
     result = runner.invoke(
         app,
-        ["validate", str(contract_path), "--mode", "quality_only"],
+        ["validate", str(contract_path), str(data_path), "--fail-on-warning"],
     )
-    assert result.exit_code in (0, 1)
+    assert result.exit_code == 1
+    assert "CM_QUALITY_FRESHNESS" in result.stderr or "CM_QUALITY_FRESHNESS" in result.stdout
+
+    result_without_flag = runner.invoke(
+        app,
+        ["validate", str(contract_path), str(data_path)],
+    )
+    assert result_without_flag.exit_code == 0
 
 
 def test_validate_unsupported_format(tmp_path: Path) -> None:

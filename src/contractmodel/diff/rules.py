@@ -70,6 +70,14 @@ def is_constraint_loosening(old: FieldConstraints, new: FieldConstraints) -> boo
         return True
     if old.immutable and not new.immutable:
         return True
+    if old.allowed_values and (
+        not new.allowed_values or set(new.allowed_values) > set(old.allowed_values)
+    ):
+        return True
+    if old.disallowed_values and (
+        not new.disallowed_values or set(new.disallowed_values) < set(old.disallowed_values)
+    ):
+        return True
     return bool(old.enum_values and new.enum_values and set(new.enum_values) > set(old.enum_values))
 
 

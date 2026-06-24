@@ -110,7 +110,43 @@ def test_generate_constraints() -> None:
         model(score=101)
 
 
-def test_from_pydantic_roundtrip() -> None:
+def test_pydantic_contract_roundtrip_preserves_fields() -> None:
+    contract = CanonicalContract.model_validate(
+        {
+            "contract_id": "sample",
+            "name": "Sample",
+            "version": "1.0.0",
+            "schema": {
+                "fields": [
+                    {"name": "id", "logical_type": "string"},
+                    {
+                        "name": "count",
+                        "logical_type": "integer",
+                        "required": False,
+                        "default": 0,
+                    },
+                ]
+            },
+        }
+    )
+
+    model = generate_pydantic_model(contract)
+    roundtripped = contract_from_pydantic(model, name="Sample")
+
+    assert roundtripped.name == "Sample"
+    id_field = next(f for f in roundtripped.contract_schema.fields if f.name == "id")
+    count_field = next(f for f in roundtripped.contract_schema.fields if f.name == "count")
+    assert id_field.logical_type == LogicalType.STRING
+    assert count_field.logical_type == LogicalType.INTEGER
+    assert count_field.required is False
+    assert count_field.default == 0
+
+    regenerated = generate_pydantic_model(roundtripped)
+    instance = regenerated(id="abc")
+    assert instance.count == 0
+
+
+def test_from_pydantic_import() -> None:
     class SampleModel(BaseModel):
         id: str
         count: int = 0

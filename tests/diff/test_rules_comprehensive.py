@@ -78,6 +78,17 @@ def test_constraint_loosening_branches() -> None:
     assert is_constraint_loosening(tight, loose) is True
 
 
+def test_constraint_loosening_allowed_and_disallowed_values() -> None:
+    assert is_constraint_loosening(
+        FieldConstraints(allowed_values=["a"]),
+        FieldConstraints(allowed_values=["a", "b"]),
+    ) is True
+    assert is_constraint_loosening(
+        FieldConstraints(disallowed_values=["x", "y"]),
+        FieldConstraints(disallowed_values=["x"]),
+    ) is True
+
+
 def test_classify_none_mode() -> None:
     old = _field(name="id", required=False)
     new = _field(name="id", required=True, description="updated")

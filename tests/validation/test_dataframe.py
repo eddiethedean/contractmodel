@@ -77,20 +77,6 @@ def test_validate_parquet(tmp_path: Path) -> None:
     assert result.success is True
 
 
-def test_validate_polars() -> None:
-    pl = pytest.importorskip("polars")
-    df = pl.DataFrame(
-        {
-            "event_id": ["550e8400-e29b-41d4-a716-446655440000"],
-            "customer_id": ["C123"],
-            "event_timestamp": ["2026-06-23T12:00:00"],
-            "event_type": ["created"],
-        }
-    )
-    result = _contract().validate_polars(df)
-    assert result.success is True
-
-
 def test_optional_dependency_error(monkeypatch: pytest.MonkeyPatch) -> None:
     contract = CanonicalContract.model_validate(
         {

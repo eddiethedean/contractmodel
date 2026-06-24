@@ -49,6 +49,8 @@ def test_constraint_roundtrip() -> None:
     exported_field = exported["schema"][0]
     assert exported_field["minValue"] == 0
     assert exported_field["unique"] is True
+    roundtripped = import_odcs(exported)
+    assert roundtripped.contract_schema.fields[0].constraints == field.constraints
 
 
 def test_field_extensions_preserved() -> None:

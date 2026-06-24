@@ -76,3 +76,17 @@ def test_is_breaking_change_helper() -> None:
     ]
     new = DataContract.from_ccm(new_ccm)
     assert old.is_breaking_change(new) is True
+
+
+def test_diff_populates_changed_fields_and_versions() -> None:
+    old = _base_contract()
+    new_ccm = copy.deepcopy(old.ccm)
+    new_ccm.version = "2.0.0"
+    score_field = next(f for f in new_ccm.contract_schema.fields if f.name == "customer_id")
+    score_field.constraints.max_length = 10
+    new = DataContract.from_ccm(new_ccm)
+
+    diff = old.diff(new)
+    assert diff.source_version == "1.0.0"
+    assert diff.target_version == "2.0.0"
+    assert any(change.field == "customer_id" for change in diff.changed_fields)

@@ -10,7 +10,7 @@ from contractmodel.diff.rules import (
 )
 
 
-def test_diff_forward_mode_optional_add() -> None:
+def test_diff_forward_mode_required_add_breaking() -> None:
     old = CanonicalContract.model_validate(
         {
             "contract_id": "a",
@@ -34,6 +34,38 @@ def test_diff_forward_mode_optional_add() -> None:
     )
     result = diff_contracts(old, new, mode=CompatibilityMode.FORWARD)
     assert result.is_breaking is True
+
+
+def test_diff_forward_mode_optional_add_non_breaking() -> None:
+    old = CanonicalContract.model_validate(
+        {
+            "contract_id": "a",
+            "name": "A",
+            "version": "1.0.0",
+            "schema": {"fields": [{"name": "id", "logical_type": "string", "required": True}]},
+        }
+    )
+    new = CanonicalContract.model_validate(
+        {
+            "contract_id": "a",
+            "name": "A",
+            "version": "2.0.0",
+            "schema": {
+                "fields": [
+                    {"name": "id", "logical_type": "string", "required": True},
+                    {
+                        "name": "extra",
+                        "logical_type": "string",
+                        "required": False,
+                        "nullable": True,
+                    },
+                ]
+            },
+        }
+    )
+    result = diff_contracts(old, new, mode=CompatibilityMode.FORWARD)
+    assert result.is_breaking is False
+    assert "extra" in result.added_fields
 
 
 def test_diff_full_mode() -> None:
