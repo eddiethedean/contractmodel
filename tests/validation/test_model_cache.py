@@ -1,5 +1,6 @@
 """Tests for validation model caching."""
 
+from contractmodel.adapters.pydantic import get_pydantic_model
 from contractmodel.core.ccm import CanonicalContract
 from contractmodel.core.types import ValidationMode
 from contractmodel.validation import engine as validation_engine
@@ -21,7 +22,7 @@ def _contract() -> CanonicalContract:
 
 
 def test_validation_reuses_cached_pydantic_model() -> None:
-    validation_engine._cached_pydantic_model.cache_clear()
+    get_pydantic_model.cache_clear()
     contract = _contract()
     model1 = validation_engine._validation_model(contract, mode=ValidationMode.STRICT)
     model2 = validation_engine._validation_model(contract, mode=ValidationMode.STRICT)
@@ -29,7 +30,7 @@ def test_validation_reuses_cached_pydantic_model() -> None:
 
 
 def test_validate_records_builds_model_once() -> None:
-    validation_engine._cached_pydantic_model.cache_clear()
+    get_pydantic_model.cache_clear()
     contract = _contract()
     records = [{"id": "a"}, {"id": "b"}]
     result = validation_engine.validate_records(contract, records)

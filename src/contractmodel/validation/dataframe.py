@@ -10,6 +10,7 @@ from contractmodel.core.result import ValidationErrorDetail, ValidationResult
 from contractmodel.core.types import ValidationMode
 from contractmodel.errors import OptionalDependencyError
 from contractmodel.validation.engine import validate_records
+from contractmodel.validation.limits import check_row_limit
 
 
 def validate_csv(
@@ -17,12 +18,13 @@ def validate_csv(
     path: str | Path,
     *,
     mode: ValidationMode = ValidationMode.STRICT,
-    **kwargs: Any,
+    read_csv_kwargs: dict[str, Any] | None = None,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a CSV file against a contract."""
     pd = _import_pandas()
-    df = pd.read_csv(path, **kwargs)
-    return validate_pandas(contract, df, mode=mode)
+    df = pd.read_csv(path, **(read_csv_kwargs or {}))
+    return validate_pandas(contract, df, mode=mode, max_rows=max_rows)
 
 
 def validate_parquet(
@@ -30,7 +32,8 @@ def validate_parquet(
     path: str | Path,
     *,
     mode: ValidationMode = ValidationMode.STRICT,
-    **kwargs: Any,
+    read_parquet_kwargs: dict[str, Any] | None = None,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Parquet file against a contract."""
     pd = _import_pandas()
@@ -38,8 +41,8 @@ def validate_parquet(
         import pyarrow  # noqa: F401
     except ImportError as exc:
         raise OptionalDependencyError("parquet") from exc
-    df = pd.read_parquet(path, **kwargs)
-    return validate_pandas(contract, df, mode=mode)
+    df = pd.read_parquet(path, **(read_parquet_kwargs or {}))
+    return validate_pandas(contract, df, mode=mode, max_rows=max_rows)
 
 
 def validate_pandas(
@@ -47,12 +50,17 @@ def validate_pandas(
     df: Any,
     *,
     mode: ValidationMode = ValidationMode.STRICT,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Pandas DataFrame against a contract."""
     pd = _import_pandas()
     if not isinstance(df, pd.DataFrame):
         msg = "Expected a pandas.DataFrame"
         raise TypeError(msg)
+
+    row_limit = check_row_limit(len(df), max_rows)
+    if row_limit is not None:
+        return row_limit
 
     errors = _schema_errors(contract, list(df.columns), mode)
     normalized = df.where(pd.notna(df), None)
@@ -79,12 +87,17 @@ def validate_polars(
     df: Any,
     *,
     mode: ValidationMode = ValidationMode.STRICT,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Polars DataFrame against a contract."""
     pl = _import_polars()
     if not isinstance(df, pl.DataFrame):
         msg = "Expected a polars.DataFrame"
         raise TypeError(msg)
+
+    row_limit = check_row_limit(len(df), max_rows)
+    if row_limit is not None:
+        return row_limit
 
     errors = _schema_errors(contract, df.columns, mode)
     result = validate_records(

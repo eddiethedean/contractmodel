@@ -77,14 +77,14 @@ def is_odcs_document(data: dict[str, Any]) -> bool:
     """Return True when the document looks like ODCS."""
     if data.get("format") == "odcs":
         return True
-    if data.get("kind") == "DataContract":
-        return True
-    return (
-        "apiVersion" in data
-        and "contract_id" not in data
-        and "id" in data
-        and isinstance(data.get("schema"), list)
-    )
+    if "contract_id" in data:
+        return False
+    if isinstance(data.get("schema"), list) and "id" in data:
+        if "apiVersion" in data:
+            return True
+        if data.get("kind") == "DataContract":
+            return True
+    return False
 
 
 def import_odcs(data: dict[str, Any]) -> CanonicalContract:
@@ -157,13 +157,29 @@ def _import_ownership(owner_data: Any) -> Ownership | None:
     contacts: list[Contact] = []
     contact = owner_data.get("contact")
     if contact:
-        contacts.append(Contact(email=str(contact)))
+        contacts.extend(_parse_contacts(contact))
 
     return Ownership(
         owner=owner_data.get("owner"),
         team=owner_data.get("team"),
         contacts=contacts,
     )
+
+
+def _parse_contacts(contact: Any) -> list[Contact]:
+    if isinstance(contact, list):
+        return [_contact_from_item(item) for item in contact]
+    return [_contact_from_item(contact)]
+
+
+def _contact_from_item(item: Any) -> Contact:
+    if isinstance(item, dict):
+        return Contact(
+            email=item.get("email"),
+            name=item.get("name"),
+            role=item.get("role"),
+        )
+    return Contact(email=str(item))
 
 
 def _export_ownership(ownership: Ownership) -> dict[str, Any]:
@@ -184,7 +200,13 @@ def _import_schema(schema_data: Any) -> ContractSchema:
         msg = "ODCS schema must be a list of fields"
         raise OdcsImportError(msg)
 
-    return ContractSchema(fields=[_import_field(item) for item in schema_data])
+    fields: list[ContractField] = []
+    for index, item in enumerate(schema_data):
+        if not isinstance(item, dict):
+            msg = f"ODCS schema item {index} must be an object"
+            raise OdcsImportError(msg)
+        fields.append(_import_field(item))
+    return ContractSchema(fields=fields)
 
 
 def _import_field(field_data: dict[str, Any]) -> ContractField:
@@ -197,9 +219,15 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
     logical_type_raw = field_data.get("logicalType") or field_data.get("logical_type", "string")
     enum_values = field_data.get("enum")
 
-    if enum_values:
+    if enum_values is not None:
+        if not enum_values:
+            msg = f"ODCS field '{field_data['name']}' enum must be non-empty"
+            raise OdcsImportError(msg)
         logical_type = LogicalType.ENUM
         constraints = _import_constraints(field_data, enum_values=list(enum_values))
+    elif str(logical_type_raw).lower() == LogicalType.ENUM.value:
+        msg = f"ODCS field '{field_data['name']}' enum type requires enum values"
+        raise OdcsImportError(msg)
     else:
         try:
             logical_type = LogicalType(str(logical_type_raw).lower())

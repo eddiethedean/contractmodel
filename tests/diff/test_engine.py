@@ -76,6 +76,7 @@ def test_is_breaking_change_helper() -> None:
     ]
     new = DataContract.from_ccm(new_ccm)
     assert old.is_breaking_change(new) is True
+    assert old.has_breaking_changes(new) is True
 
 
 def test_diff_populates_changed_fields_and_versions() -> None:

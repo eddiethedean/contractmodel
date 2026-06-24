@@ -37,3 +37,12 @@ class ValidationResult(BaseModel):
     errors: list[ValidationErrorDetail] = Field(default_factory=list)
     warnings: list[ValidationWarningDetail] = Field(default_factory=list)
     metrics: dict[str, Any] = Field(default_factory=dict)
+
+    def __bool__(self) -> bool:
+        return self.success
+
+    def raise_for_errors(self) -> None:
+        """Raise ValueError if validation failed."""
+        if not self.success:
+            messages = [f"{e.code}: {e.message}" for e in self.errors]
+            raise ValueError("; ".join(messages))

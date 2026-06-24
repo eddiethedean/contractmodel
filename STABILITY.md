@@ -6,13 +6,13 @@ ContractModel follows [Semantic Versioning](https://semver.org/) for public rele
 
 These are intended to remain backward compatible within the 0.x line unless a serious bug fix requires otherwise. Breaking changes are reserved for **0.2.0+** with migration notes.
 
-- `DataContract` loader and validation methods (`from_yaml`, `from_json`, `from_odcs`, `validate_*`, `diff`, `to_*` exporters)
-- `ValidationResult`, `ValidationErrorDetail`, `ValidationWarningDetail` field shapes
+- `DataContract` loader and validation methods (`load`, `from_yaml`, `from_json`, `from_dict`, `from_odcs`, `validate_*`, `diff`, `to_*` exporters, `save`)
+- `ValidationResult`, `ValidationErrorDetail`, `ValidationWarningDetail` field shapes (including `__bool__` and `raise_for_errors()`)
 - `ContractDiff`, `BreakingChange`, `NonBreakingChange`, `FieldChange`
 - Top-level package exports in `contractmodel.__all__`
 - `ValidationMode` and `CompatibilityMode` enum member names and values
 
-Call `to_pydantic()` once per contract and reuse the returned model class. The library caches validation models internally, but repeated calls may still return equivalent generated types.
+Call `to_pydantic(mode=...)` once per contract and reuse the returned model class. The same cached model is used for validation at the matching `mode`.
 
 ## Tier 2 — Stable with caveats
 

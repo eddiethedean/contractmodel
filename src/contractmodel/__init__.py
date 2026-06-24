@@ -8,26 +8,46 @@ from contractmodel.core.result import (
     ValidationResult,
     ValidationWarningDetail,
 )
-from contractmodel.core.types import CompatibilityMode, ValidationMode
-from contractmodel.diff.engine import BreakingChange, ContractDiff, FieldChange, NonBreakingChange
+from contractmodel.core.types import CompatibilityMode, LogicalType, ValidationMode
+from contractmodel.diff.engine import (
+    BreakingChange,
+    ChangeType,
+    ContractDiff,
+    FieldChange,
+    NonBreakingChange,
+)
+from contractmodel.errors import (
+    ContractModelError,
+    ContractPluginError,
+    OdcsImportError,
+    OptionalDependencyError,
+    RegistryError,
+)
 from contractmodel.model import ContractModel
 
 __all__ = [
     "BreakingChange",
     "CanonicalContract",
+    "ChangeType",
     "CompatibilityMode",
     "ContractDiff",
     "ContractField",
     "ContractModel",
+    "ContractModelError",
+    "ContractPluginError",
     "ContractSchema",
     "DataContract",
-    "examples",
     "FieldChange",
+    "LogicalType",
     "NonBreakingChange",
+    "OdcsImportError",
+    "OptionalDependencyError",
+    "RegistryError",
     "ValidationErrorDetail",
     "ValidationMode",
     "ValidationResult",
     "ValidationWarningDetail",
+    "examples",
     "__version__",
 ]
 

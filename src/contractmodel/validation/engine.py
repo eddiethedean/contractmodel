@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Mapping
-from functools import lru_cache
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from contractmodel.adapters.pydantic import generate_pydantic_model
+from contractmodel.adapters.pydantic import get_pydantic_model, mode_to_generation_options
 from contractmodel.core.ccm import CanonicalContract
 from contractmodel.core.result import (
     ValidationErrorDetail,
@@ -17,21 +16,8 @@ from contractmodel.core.result import (
     ValidationWarningDetail,
 )
 from contractmodel.core.types import ValidationMode
+from contractmodel.validation.limits import check_byte_limit, check_row_limit
 from contractmodel.validation.quality import validate_quality_rules
-
-
-@lru_cache(maxsize=64)
-def _cached_pydantic_model(
-    contract_json: str,
-    schema_only: bool,
-    forbid_extra: bool,
-) -> type[BaseModel]:
-    contract = CanonicalContract.model_validate_json(contract_json)
-    return generate_pydantic_model(
-        contract,
-        schema_only=schema_only,
-        forbid_extra=forbid_extra,
-    )
 
 
 def _validation_model(
@@ -39,10 +25,10 @@ def _validation_model(
     *,
     mode: ValidationMode,
 ) -> type[BaseModel]:
-    schema_only = mode == ValidationMode.SCHEMA_ONLY
-    forbid_extra = mode == ValidationMode.STRICT
-    return _cached_pydantic_model(
+    schema_only, forbid_extra = mode_to_generation_options(mode)
+    return get_pydantic_model(
         contract.model_dump_json(),
+        None,
         schema_only,
         forbid_extra,
     )
@@ -117,9 +103,14 @@ def validate_records(
     *,
     mode: ValidationMode = ValidationMode.STRICT,
     skip_missing_field_errors: bool = False,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate multiple records against a contract."""
     record_list = list(records)
+    row_limit_result = check_row_limit(len(record_list), max_rows)
+    if row_limit_result is not None:
+        return row_limit_result
+
     all_errors: list[ValidationErrorDetail] = []
     all_warnings: list[ValidationWarningDetail] = []
     total = len(record_list)
@@ -145,8 +136,13 @@ def validate_records(
             invalid += 1
 
     unique_fields = {f.name for f in contract.contract_schema.fields if f.constraints.unique}
+    uniqueness_errors: list[ValidationErrorDetail] = []
     if unique_fields and total > 0:
-        all_errors.extend(_check_uniqueness(record_list, unique_fields))
+        uniqueness_errors = _check_uniqueness(record_list, unique_fields)
+        all_errors.extend(uniqueness_errors)
+
+    if uniqueness_errors and invalid < total:
+        invalid = max(invalid, 1)
 
     success = len(all_errors) == 0
     return ValidationResult(
@@ -169,8 +165,15 @@ def validate_json(
     data: str | bytes | Mapping[str, Any] | list[Mapping[str, Any]],
     *,
     mode: ValidationMode = ValidationMode.STRICT,
+    max_bytes: int | None = None,
+    max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate JSON data against a contract."""
+    if isinstance(data, (str, bytes)):
+        byte_limit_result = check_byte_limit(data, max_bytes)
+        if byte_limit_result is not None:
+            return byte_limit_result
+
     try:
         parsed = json.loads(data) if isinstance(data, (str, bytes)) else data
     except json.JSONDecodeError as exc:
@@ -200,12 +203,19 @@ def validate_json(
                         value=item,
                     )
                 )
-        result = validate_records(contract, records, mode=mode)
-        result.errors = errors + result.errors
-        result.error_count = len(result.errors)
-        result.success = result.error_count == 0
-        result.metrics["records_total"] = len(parsed)
-        return result
+        result = validate_records(contract, records, mode=mode, max_rows=max_rows)
+        merged_errors = errors + result.errors
+        merged_success = len(merged_errors) == 0
+        metrics = dict(result.metrics)
+        metrics["records_total"] = len(parsed)
+        return ValidationResult(
+            success=merged_success,
+            error_count=len(merged_errors),
+            warning_count=result.warning_count,
+            errors=merged_errors,
+            warnings=result.warnings,
+            metrics=metrics,
+        )
 
     if isinstance(parsed, dict):
         return validate_record(contract, parsed, mode=mode)
@@ -259,19 +269,28 @@ def _error_type_to_code(error_type: str) -> str:
     return "CM_TYPE_INVALID"
 
 
+def _uniqueness_key(value: Any) -> str:
+    try:
+        hash(value)
+    except TypeError:
+        return json.dumps(value, sort_keys=True, default=str)
+    return str(value)
+
+
 def _check_uniqueness(
     records: list[Mapping[str, Any]],
     unique_fields: set[str],
 ) -> list[ValidationErrorDetail]:
     errors: list[ValidationErrorDetail] = []
-    seen: dict[str, set[Any]] = {field: set() for field in unique_fields}
+    seen: dict[str, set[str]] = {field: set() for field in unique_fields}
 
     for index, record in enumerate(records):
         for field in unique_fields:
             value = record.get(field)
             if value is None:
                 continue
-            if value in seen[field]:
+            key = _uniqueness_key(value)
+            if key in seen[field]:
                 errors.append(
                     ValidationErrorDetail(
                         code="CM_DATASET_UNIQUE",
@@ -282,6 +301,6 @@ def _check_uniqueness(
                     )
                 )
             else:
-                seen[field].add(value)
+                seen[field].add(key)
 
     return errors

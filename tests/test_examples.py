@@ -76,3 +76,13 @@ def test_load_example_invalid_yaml(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     bad.write_text("not-a-mapping\n", encoding="utf-8")
     with pytest.raises(ValueError, match="mapping"):
         load_example("bad.ccm.yaml")
+
+
+def test_load_example_json_contract(monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = (
+        '{"contract_id": "json-example", "name": "JSON", "version": "1.0.0", '
+        '"schema": {"fields": [{"name": "id", "logical_type": "string"}]}}'
+    )
+    monkeypatch.setattr(examples_mod, "read_example_text", lambda _name: payload)
+    contract = load_example("sample.ccm.json")
+    assert contract.ccm.contract_id == "json-example"

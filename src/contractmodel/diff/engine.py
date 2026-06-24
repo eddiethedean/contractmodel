@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from contractmodel.core.ccm import CanonicalContract, ContractField
@@ -14,11 +16,18 @@ from contractmodel.diff.rules import (
 )
 
 
+class ChangeType(str, Enum):
+    TYPE_CHANGED = "type_changed"
+    CONSTRAINTS_CHANGED = "constraints_changed"
+    METADATA_CHANGED = "metadata_changed"
+    MODIFIED = "modified"
+
+
 class FieldChange(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     field: str
-    change_type: str
+    change_type: ChangeType
     old_value: str | None = None
     new_value: str | None = None
 
@@ -245,11 +254,11 @@ def _diff_field_pair(
                 )
 
 
-def _summarize_change(old_field: ContractField, new_field: ContractField) -> str:
+def _summarize_change(old_field: ContractField, new_field: ContractField) -> ChangeType:
     if old_field.logical_type != new_field.logical_type:
-        return "type_changed"
+        return ChangeType.TYPE_CHANGED
     if old_field.constraints != new_field.constraints:
-        return "constraints_changed"
+        return ChangeType.CONSTRAINTS_CHANGED
     if old_field.description != new_field.description:
-        return "metadata_changed"
-    return "modified"
+        return ChangeType.METADATA_CHANGED
+    return ChangeType.MODIFIED

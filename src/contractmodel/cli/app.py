@@ -13,7 +13,6 @@ import yaml
 from pydantic import BaseModel
 
 from contractmodel.contract import DataContract
-from contractmodel.core.result import ValidationResult
 from contractmodel.core.types import CompatibilityMode, ValidationMode
 from contractmodel.errors import ContractPluginError, OptionalDependencyError, RegistryError
 from contractmodel.plugins.runtime import list_plugins, run_exporter_plugin, run_registry_publish
@@ -112,7 +111,7 @@ def validate(
         raise typer.Exit(code=0)
 
     try:
-        result = _validate_data(contract, data_path, format=format, mode=mode)
+        result = contract.validate(data_path, format=format, mode=mode)
     except OptionalDependencyError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=3) from exc
@@ -325,33 +324,6 @@ def doctor() -> None:
             typer.echo(f"  plugins.{group}: none")
 
 
-def _validate_data(
-    contract: DataContract,
-    data_path: Path,
-    *,
-    format: str,
-    mode: ValidationMode,
-) -> ValidationResult:
-    suffix = data_path.suffix.lower()
-    resolved_format = format
-    if resolved_format == "auto":
-        if suffix == ".csv":
-            resolved_format = "csv"
-        elif suffix == ".parquet":
-            resolved_format = "parquet"
-        else:
-            resolved_format = "json"
-
-    if resolved_format == "csv":
-        return contract.validate_csv(data_path, mode=mode)
-    if resolved_format == "parquet":
-        return contract.validate_parquet(data_path, mode=mode)
-    if resolved_format == "json":
-        return contract.validate_json(data_path.read_text(encoding="utf-8"), mode=mode)
-    msg = f"Unsupported data format: {resolved_format}"
-    raise ValueError(msg)
-
-
 def _render_pydantic_model_source(model: type[BaseModel]) -> str:
     """Render an importable Python module for a generated model."""
     lines = [
@@ -366,8 +338,12 @@ def _render_pydantic_model_source(model: type[BaseModel]) -> str:
         lines.append("    pass")
     else:
         for name, field in model.model_fields.items():
-            annotation = getattr(field.annotation, "__name__", None) or str(field.annotation)
-            annotation = annotation.replace("typing.", "")
+            annotation_obj = field.annotation
+            if isinstance(annotation_obj, type) and issubclass(annotation_obj, BaseModel):
+                annotation = annotation_obj.__name__
+            else:
+                annotation = getattr(annotation_obj, "__name__", None) or str(annotation_obj)
+                annotation = annotation.replace("typing.", "")
             if field.is_required():
                 lines.append(f"    {name}: {annotation}")
             else:

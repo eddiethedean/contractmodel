@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### API improvements
+
+- Generated Pydantic models now consistently subclass `ContractModel`; unified model cache shared by `to_pydantic()` and `validate_*`
+- Add `DataContract.load`, `from_dict`, `validate(path)`, `to_yaml`, `to_json`, `save`, and metadata properties (`contract_id`, `kind`, `status`, `schema`)
+- Add `has_breaking_changes` (keep `is_breaking_change` as alias), `ValidationResult.__bool__`, and `raise_for_errors()`
+- Export `LogicalType`, `ChangeType`, and exception types from top-level package
+- `FieldChange.change_type` is now a `ChangeType` enum; `validate_csv`/`validate_parquet` use typed `read_*_kwargs`
+- Add method docstrings on `DataContract`; sync public API specification and reference docs
+
+### Documentation and packaging
+
 - Package bundled examples with `contractmodel.examples` helpers (`load_example`, `example_path`)
 - Fix `nested_schema.ccm.yaml` quality rule metadata
 - Add sample data (`examples/data/`) for CLI validation demos

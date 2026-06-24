@@ -7,15 +7,40 @@ import re
 import uuid
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Literal, cast, get_args, get_origin
+from functools import lru_cache
+from typing import Any, cast, get_args, get_origin
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, create_model
 from pydantic.networks import AnyUrl
 
 from contractmodel.core.ccm import CanonicalContract, ContractField, ContractSchema
 from contractmodel.core.constraints import FieldConstraints
-from contractmodel.core.types import LogicalType
+from contractmodel.core.types import LogicalType, ValidationMode
 from contractmodel.model import ContractModel
+
+
+def mode_to_generation_options(mode: ValidationMode) -> tuple[bool, bool]:
+    """Map a validation mode to Pydantic model generation flags."""
+    schema_only = mode == ValidationMode.SCHEMA_ONLY
+    forbid_extra = mode == ValidationMode.STRICT
+    return schema_only, forbid_extra
+
+
+@lru_cache(maxsize=128)
+def get_pydantic_model(
+    contract_json: str,
+    class_name: str | None,
+    schema_only: bool,
+    forbid_extra: bool,
+) -> type[BaseModel]:
+    """Return a cached Pydantic model for a contract and generation options."""
+    contract = CanonicalContract.model_validate_json(contract_json)
+    return generate_pydantic_model(
+        contract,
+        class_name=class_name,
+        schema_only=schema_only,
+        forbid_extra=forbid_extra,
+    )
 
 
 def generate_pydantic_model(
@@ -32,12 +57,14 @@ def generate_pydantic_model(
         model_name,
         schema_only=schema_only,
     )
-    extra_mode: Literal["forbid", "ignore"] = "forbid" if forbid_extra else "ignore"
-    base = type(
-        f"{model_name}Base",
-        (BaseModel,),
-        {"model_config": ConfigDict(extra=extra_mode)},
-    )
+    if forbid_extra:
+        base: type[BaseModel] = ContractModel
+    else:
+        base = type(
+            f"{model_name}PermissiveBase",
+            (ContractModel,),
+            {"model_config": ConfigDict(extra="ignore")},
+        )
     return create_model(
         model_name,
         __base__=base,
@@ -197,7 +224,8 @@ def _create_enum_class(field: ContractField, model_name: str) -> type[Enum]:
         used_names.add(name)
         members[name] = value
     if not members:
-        members = {"UNKNOWN": "unknown"}
+        msg = f"ENUM field '{field.name}' must have non-empty enum_values"
+        raise ValueError(msg)
     return cast(type[Enum], Enum(enum_name, members))
 
 

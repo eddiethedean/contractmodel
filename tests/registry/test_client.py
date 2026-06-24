@@ -97,7 +97,8 @@ def test_fetch_contract_ccm() -> None:
     }
     captured: list[str] = []
     response = MagicMock()
-    response.read.return_value = json.dumps(payload).encode()
+    payload_bytes = json.dumps(payload).encode()
+    response.read.side_effect = [payload_bytes, b""]
     response.__enter__ = lambda self: self
     response.__exit__ = MagicMock(return_value=False)
 
@@ -121,7 +122,8 @@ def test_fetch_contract_without_version_uses_base_path() -> None:
     }
     captured: list[str] = []
     response = MagicMock()
-    response.read.return_value = json.dumps(payload).encode()
+    payload_bytes = json.dumps(payload).encode()
+    response.read.side_effect = [payload_bytes, b""]
     response.__enter__ = lambda self: self
     response.__exit__ = MagicMock(return_value=False)
 
@@ -145,13 +147,39 @@ def test_fetch_contract_odcs() -> None:
         "schema": [{"name": "id", "logicalType": "string", "required": True}],
     }
     response = MagicMock()
-    response.read.return_value = json.dumps(payload).encode()
+    payload_bytes = json.dumps(payload).encode()
+    response.read.side_effect = [payload_bytes, b""]
     response.__enter__ = lambda self: self
     response.__exit__ = MagicMock(return_value=False)
 
     with patch("urllib.request.urlopen", return_value=response):
         contract = fetch_contract("http://registry.test", "test")
     assert contract.contract_id == "test"
+
+
+def test_publish_contract_url_encodes_contract_id() -> None:
+    contract = CanonicalContract.model_validate(
+        {
+            "contract_id": "foo/bar",
+            "name": "Test",
+            "version": "1.0.0",
+            "schema": {"fields": [{"name": "id", "logical_type": "string"}]},
+        }
+    )
+    captured: list[object] = []
+    response = MagicMock()
+    response.status = 201
+    response.__enter__ = lambda self: self
+    response.__exit__ = MagicMock(return_value=False)
+
+    def fake_urlopen(request: object, timeout: int = 30) -> MagicMock:
+        captured.append(request)
+        return response
+
+    with patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        publish_contract(contract, "http://registry.test/")
+    request = captured[0]
+    assert request.full_url == "http://registry.test/contracts/foo%2Fbar/versions"
 
 
 def test_fetch_contract_failure() -> None:

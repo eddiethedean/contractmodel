@@ -7,8 +7,12 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from contractmodel import DataContract
-from contractmodel.adapters.pydantic import contract_from_pydantic, generate_pydantic_model
+from contractmodel import ContractModel, DataContract, ValidationMode
+from contractmodel.adapters.pydantic import (
+    contract_from_pydantic,
+    generate_pydantic_model,
+    get_pydantic_model,
+)
 from contractmodel.core.ccm import CanonicalContract
 from contractmodel.core.types import LogicalType
 
@@ -18,6 +22,8 @@ EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples"
 def test_generate_customer_events_model() -> None:
     contract = DataContract.from_odcs(EXAMPLES_DIR / "customer_events.odcs.yaml")
     model = contract.to_pydantic(class_name="CustomerEvent")
+
+    assert issubclass(model, ContractModel)
 
     instance = model(
         event_id=uuid.UUID("550e8400-e29b-41d4-a716-446655440000"),
@@ -156,3 +162,13 @@ def test_from_pydantic_import() -> None:
     assert len(contract.contract_schema.fields) == 2
     assert contract.contract_schema.fields[0].logical_type == LogicalType.STRING
     assert contract.contract_schema.fields[1].logical_type == LogicalType.INTEGER
+
+
+def test_to_pydantic_shares_cache_with_validation_engine() -> None:
+    get_pydantic_model.cache_clear()
+    contract = DataContract.from_odcs(EXAMPLES_DIR / "customer_events.odcs.yaml")
+    pydantic_model = contract.to_pydantic(mode=ValidationMode.STRICT)
+    from contractmodel.validation import engine as validation_engine
+
+    validation_model = validation_engine._validation_model(contract.ccm, mode=ValidationMode.STRICT)
+    assert pydantic_model is validation_model

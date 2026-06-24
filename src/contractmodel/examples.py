@@ -19,18 +19,44 @@ def _dev_examples_dir() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "examples"
 
 
+def _validate_example_name(name: str) -> None:
+    """Reject paths that escape the examples bundle or repository directory."""
+    if not name or name.startswith("/") or name.startswith("\\"):
+        msg = f"Invalid example name: {name!r}"
+        raise ValueError(msg)
+    path = Path(name)
+    if path.is_absolute():
+        msg = f"Invalid example name: {name!r}"
+        raise ValueError(msg)
+    if ".." in path.parts:
+        msg = f"Invalid example name: {name!r}"
+        raise ValueError(msg)
+
+
+def _assert_within_root(path: Path, root: Path) -> None:
+    resolved = path.resolve()
+    root_resolved = root.resolve()
+    if not resolved.is_relative_to(root_resolved):
+        msg = f"Example path escapes allowed directory: {path}"
+        raise ValueError(msg)
+
+
 def _bundled_file(name: str) -> Any:
+    _validate_example_name(name)
     root = importlib.resources.files("contractmodel").joinpath("examples_data")
     ref: Any = root
-    for part in name.split("/"):
+    for part in Path(name).parts:
         ref = ref.joinpath(part)
     return ref
 
 
 def read_example_text(name: str) -> str:
     """Read example file contents from the repo checkout or installed package."""
-    dev_path = _dev_examples_dir() / name
+    _validate_example_name(name)
+    dev_root = _dev_examples_dir()
+    dev_path = dev_root / name
     if dev_path.is_file():
+        _assert_within_root(dev_path, dev_root)
         return dev_path.read_text(encoding="utf-8")
     return str(_bundled_file(name).read_text(encoding="utf-8"))
 
@@ -42,12 +68,16 @@ def example_path(name: str) -> Path:
     Uses the repository ``examples/`` directory when developing from a clone.
     When installed from PyPI, extracts bundled examples to a stable cache path.
     """
-    dev_path = _dev_examples_dir() / name
+    _validate_example_name(name)
+    dev_root = _dev_examples_dir()
+    dev_path = dev_root / name
     if dev_path.is_file():
+        _assert_within_root(dev_path, dev_root)
         return dev_path
 
     cache_root = Path.home() / ".cache" / "contractmodel" / "examples"
-    cached = cache_root / name
+    cached = (cache_root / name).resolve()
+    _assert_within_root(cached, cache_root.resolve())
     if not cached.is_file():
         cached.parent.mkdir(parents=True, exist_ok=True)
         cached.write_bytes(_bundled_file(name).read_bytes())
