@@ -8,12 +8,19 @@ ContractModel provides a complete developer-first data contract lifecycle for Py
 
 ```text
 External Contract Formats
+  - CCM (native YAML/JSON)
   - ODCS
   - JSON Schema
-  - Pydantic
-  - dbt
-  - Avro
   - OpenAPI
+  - Pydantic
+  - Avro
+  - Protobuf
+  - Parquet schema
+  - dbt
+  - AsyncAPI
+  - Delta Lake / Iceberg
+  - RDF / SHACL / OWL
+  - (see docs/roadmap/03-data-contract-formats.md)
         |
         v
 Import Adapters

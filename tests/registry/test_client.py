@@ -46,11 +46,30 @@ def test_publish_contract_success() -> None:
     assert result.status == "201"
     assert result.contract_id == "test"
     request = captured[0]
-    assert request.full_url == "http://registry.test/contracts"
+    assert request.full_url == "http://registry.test/contracts/test/versions"
     assert request.method == "POST"
     assert request.headers["Content-type"] == "application/json"
     payload = json.loads(request.data.decode())
     assert payload["contract_id"] == "test"
+
+
+def test_publish_contract_sends_auth_header(monkeypatch: pytest.MonkeyPatch) -> None:
+    contract = _sample_contract()
+    captured: list[object] = []
+    response = MagicMock()
+    response.status = 201
+    response.__enter__ = lambda self: self
+    response.__exit__ = MagicMock(return_value=False)
+    monkeypatch.setenv("CONTRACT_REGISTRY_TOKEN", "secret-token")
+
+    def fake_urlopen(request: object, timeout: int = 30) -> MagicMock:
+        captured.append(request)
+        return response
+
+    with patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        publish_contract(contract, "http://registry.test")
+    request = captured[0]
+    assert request.headers["Authorization"] == "Bearer secret-token"
 
 
 def test_publish_contract_failure() -> None:
@@ -82,8 +101,9 @@ def test_fetch_contract_ccm() -> None:
     response.__enter__ = lambda self: self
     response.__exit__ = MagicMock(return_value=False)
 
-    def fake_urlopen(url: str, timeout: int = 30) -> MagicMock:
-        captured.append(url)
+    def fake_urlopen(request: object, timeout: int = 30) -> MagicMock:
+        url = getattr(request, "full_url", request)
+        captured.append(str(url))
         return response
 
     with patch("urllib.request.urlopen", side_effect=fake_urlopen):
@@ -105,8 +125,9 @@ def test_fetch_contract_without_version_uses_base_path() -> None:
     response.__enter__ = lambda self: self
     response.__exit__ = MagicMock(return_value=False)
 
-    def fake_urlopen(url: str, timeout: int = 30) -> MagicMock:
-        captured.append(url)
+    def fake_urlopen(request: object, timeout: int = 30) -> MagicMock:
+        url = getattr(request, "full_url", request)
+        captured.append(str(url))
         return response
 
     with patch("urllib.request.urlopen", side_effect=fake_urlopen):

@@ -19,6 +19,7 @@ from contractmodel.diff.engine import ContractDiff, diff_contracts
 from contractmodel.export.json_schema import export_json_schema
 from contractmodel.export.markdown import export_markdown
 from contractmodel.export.openapi import export_openapi
+from contractmodel.plugins.runtime import run_validator_plugins
 from contractmodel.semantic.owl import export_owl
 from contractmodel.semantic.rdf import export_rdf
 from contractmodel.semantic.shacl import export_shacl
@@ -37,6 +38,7 @@ class DataContract:
     ) -> None:
         self._ccm = ccm
         self._import_warnings = import_warnings or []
+        self._pydantic_models: dict[str | None, type[BaseModel]] = {}
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> DataContract:
@@ -114,7 +116,12 @@ class DataContract:
         return self._ccm.contract_schema.fields
 
     def to_pydantic(self, *, class_name: str | None = None) -> type[BaseModel]:
-        return generate_pydantic_model(self._ccm, class_name=class_name)
+        if class_name not in self._pydantic_models:
+            self._pydantic_models[class_name] = generate_pydantic_model(
+                self._ccm,
+                class_name=class_name,
+            )
+        return self._pydantic_models[class_name]
 
     def validate_record(
         self,
@@ -122,7 +129,8 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
     ) -> ValidationResult:
-        return validation_engine.validate_record(self._ccm, record, mode=mode)
+        result = validation_engine.validate_record(self._ccm, record, mode=mode)
+        return run_validator_plugins(self._ccm, dict(record), result)
 
     def validate_records(
         self,
@@ -130,7 +138,9 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
     ) -> ValidationResult:
-        return validation_engine.validate_records(self._ccm, records, mode=mode)
+        record_list = list(records)
+        result = validation_engine.validate_records(self._ccm, record_list, mode=mode)
+        return run_validator_plugins(self._ccm, record_list, result)
 
     def validate_json(
         self,
@@ -138,7 +148,14 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
     ) -> ValidationResult:
-        return validation_engine.validate_json(self._ccm, data, mode=mode)
+        result = validation_engine.validate_json(self._ccm, data, mode=mode)
+        plugin_data: Any = data
+        if isinstance(data, (str, bytes)):
+            try:
+                plugin_data = json.loads(data)
+            except json.JSONDecodeError:
+                plugin_data = data
+        return run_validator_plugins(self._ccm, plugin_data, result)
 
     def validate_csv(
         self,
@@ -147,7 +164,8 @@ class DataContract:
         mode: ValidationMode = ValidationMode.STRICT,
         **kwargs: Any,
     ) -> ValidationResult:
-        return dataframe_validation.validate_csv(self._ccm, path, mode=mode, **kwargs)
+        result = dataframe_validation.validate_csv(self._ccm, path, mode=mode, **kwargs)
+        return run_validator_plugins(self._ccm, str(path), result)
 
     def validate_parquet(
         self,
@@ -156,7 +174,8 @@ class DataContract:
         mode: ValidationMode = ValidationMode.STRICT,
         **kwargs: Any,
     ) -> ValidationResult:
-        return dataframe_validation.validate_parquet(self._ccm, path, mode=mode, **kwargs)
+        result = dataframe_validation.validate_parquet(self._ccm, path, mode=mode, **kwargs)
+        return run_validator_plugins(self._ccm, str(path), result)
 
     def validate_pandas(
         self,
@@ -164,7 +183,8 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
     ) -> ValidationResult:
-        return dataframe_validation.validate_pandas(self._ccm, df, mode=mode)
+        result = dataframe_validation.validate_pandas(self._ccm, df, mode=mode)
+        return run_validator_plugins(self._ccm, df, result)
 
     def validate_polars(
         self,
@@ -172,7 +192,8 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
     ) -> ValidationResult:
-        return dataframe_validation.validate_polars(self._ccm, df, mode=mode)
+        result = dataframe_validation.validate_polars(self._ccm, df, mode=mode)
+        return run_validator_plugins(self._ccm, df, result)
 
     def diff(
         self,

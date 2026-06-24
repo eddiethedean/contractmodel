@@ -14,7 +14,18 @@ from contractmodel.adapters.odcs import is_odcs_document
     ("data", "expected"),
     [
         ({"kind": "DataContract", "contract_id": "x"}, True),
-        ({"apiVersion": "v3.0.0", "name": "n"}, True),
+        ({"format": "odcs", "contract_id": "x", "name": "X", "version": "1"}, True),
+        (
+            {
+                "apiVersion": "v3.0.0",
+                "id": "x",
+                "name": "n",
+                "version": "1.0.0",
+                "schema": [],
+            },
+            True,
+        ),
+        ({"apiVersion": "v3.0.0", "name": "n"}, False),
         ({"contract_id": "x", "apiVersion": "v3.0.0"}, False),
         ({"contract_id": "x", "name": "X", "version": "1.0.0"}, False),
     ],

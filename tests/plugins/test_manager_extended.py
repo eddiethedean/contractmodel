@@ -6,7 +6,8 @@ import pytest
 
 from contractmodel.errors import ContractPluginError
 from contractmodel.plugins import protocols
-from contractmodel.plugins.manager import discover_entry_points, list_plugins
+from contractmodel.plugins.manager import discover_entry_points, list_plugin_names
+from contractmodel.plugins.runtime import list_plugins
 
 
 def test_protocols_importable() -> None:
@@ -44,8 +45,22 @@ def test_discover_entry_points_legacy_api() -> None:
 
 
 def test_list_plugins_groups() -> None:
-    plugins = list_plugins()
+    with patch(
+        "contractmodel.plugins.runtime.list_plugin_names",
+        side_effect=lambda group: ["a"] if "validators" in group else [],
+    ):
+        plugins = list_plugins()
     assert set(plugins) == {"validators", "exporters", "registries"}
+    assert plugins["validators"] == ["a"]
+
+
+def test_list_plugin_names_without_loading() -> None:
+    entry_point = MagicMock()
+    entry_point.name = "listed"
+    with patch("contractmodel.plugins.manager.importlib.metadata.entry_points") as mock_eps:
+        mock_eps.return_value.select.return_value = [entry_point]
+        names = list_plugin_names("contractmodel.validators")
+    assert names == ["listed"]
 
 
 def test_discover_entry_points_outer_failure() -> None:

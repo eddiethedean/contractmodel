@@ -86,3 +86,43 @@
 - SHACL exporter.
 - OWL exporter.
 - Semantic mapping tests.
+
+## Epic 11: Format Adapters (P1 — 0.2.0)
+
+See [03-data-contract-formats.md](03-data-contract-formats.md).
+
+- JSON Schema import adapter.
+- OpenAPI document import adapter.
+- Avro import/export adapter.
+- Protobuf import/export adapter.
+- Parquet schema import/export adapter.
+- dbt `schema.yml` import adapter.
+
+## Epic 12: Lakehouse and Catalog Adapters (P2 — 0.3.0)
+
+- Delta Lake table schema adapter.
+- Apache Iceberg schema adapter.
+- AWS Glue Data Catalog adapter.
+- BigQuery schema adapter.
+- Snowflake schema adapter.
+
+## Epic 13: Event and Streaming Contracts (P2 — 0.3.0)
+
+- AsyncAPI import/export adapter.
+- CloudEvents payload binding adapter.
+- Spark StructType JSON adapter.
+- Kafka Schema Registry integration.
+
+## Epic 14: Quality and Semantic Import (P3)
+
+- Great Expectations suite import/export.
+- SodaCL check import.
+- LinkML import/export.
+- JSON-LD contract documents.
+
+## Epic 15: Enterprise Catalog Plugins (P3 — plugin SDK)
+
+- DataHub exporter plugin.
+- Collibra exporter plugin.
+- Alation exporter plugin.
+- Atlan exporter plugin.

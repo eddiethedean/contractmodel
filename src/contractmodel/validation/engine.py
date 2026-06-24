@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Mapping
+from functools import lru_cache
 from typing import Any
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from contractmodel.adapters.pydantic import generate_pydantic_model
 from contractmodel.core.ccm import CanonicalContract
@@ -19,26 +20,51 @@ from contractmodel.core.types import ValidationMode
 from contractmodel.validation.quality import validate_quality_rules
 
 
+@lru_cache(maxsize=64)
+def _cached_pydantic_model(
+    contract_json: str,
+    schema_only: bool,
+    forbid_extra: bool,
+) -> type[BaseModel]:
+    contract = CanonicalContract.model_validate_json(contract_json)
+    return generate_pydantic_model(
+        contract,
+        schema_only=schema_only,
+        forbid_extra=forbid_extra,
+    )
+
+
+def _validation_model(
+    contract: CanonicalContract,
+    *,
+    mode: ValidationMode,
+) -> type[BaseModel]:
+    schema_only = mode == ValidationMode.SCHEMA_ONLY
+    forbid_extra = mode == ValidationMode.STRICT
+    return _cached_pydantic_model(
+        contract.model_dump_json(),
+        schema_only,
+        forbid_extra,
+    )
+
+
 def validate_record(
     contract: CanonicalContract,
     record: Mapping[str, Any],
     *,
     mode: ValidationMode = ValidationMode.STRICT,
     skip_missing_field_errors: bool = False,
+    model: type[BaseModel] | None = None,
 ) -> ValidationResult:
     """Validate a single record against a contract."""
-    errors: list[ValidationErrorDetail] = []
-    warnings: list[ValidationWarningDetail] = []
-
     if mode == ValidationMode.QUALITY_ONLY:
         return validate_quality_rules(contract, [record])
 
-    model = generate_pydantic_model(
-        contract,
-        schema_only=mode == ValidationMode.SCHEMA_ONLY,
-        forbid_extra=mode == ValidationMode.STRICT,
-    )
-    field_names = set(model.model_fields.keys())
+    errors: list[ValidationErrorDetail] = []
+    warnings: list[ValidationWarningDetail] = []
+
+    validation_model = model or _validation_model(contract, mode=mode)
+    field_names = set(validation_model.model_fields.keys())
     payload = dict(record)
 
     if mode == ValidationMode.PERMISSIVE:
@@ -55,7 +81,7 @@ def validate_record(
             )
 
     try:
-        model.model_validate(payload)
+        validation_model.model_validate(payload)
     except ValidationError as exc:
         reported_extras = {e.field for e in errors if e.code == "CM_SCHEMA_EXTRA_FIELD"}
         for detail in _pydantic_errors_to_details(exc):
@@ -99,12 +125,17 @@ def validate_records(
     total = len(record_list)
     invalid = 0
 
+    validation_model: type[BaseModel] | None = None
+    if mode != ValidationMode.QUALITY_ONLY:
+        validation_model = _validation_model(contract, mode=mode)
+
     for index, record in enumerate(record_list):
         result = validate_record(
             contract,
             record,
             mode=mode,
             skip_missing_field_errors=skip_missing_field_errors,
+            model=validation_model,
         )
         for error in result.errors:
             all_errors.append(error.model_copy(update={"row": index}))

@@ -8,8 +8,21 @@ from typing import Any, cast
 from contractmodel.errors import ContractPluginError
 
 
+def list_plugin_names(group: str) -> list[str]:
+    """Return entry point names for a group without importing plugin modules."""
+    try:
+        entry_points = importlib.metadata.entry_points()
+        if hasattr(entry_points, "select"):
+            selected = entry_points.select(group=group)
+        else:
+            selected = cast(Any, entry_points).get(group, [])
+        return sorted(ep.name for ep in selected)
+    except Exception:
+        return []
+
+
 def discover_entry_points(group: str) -> dict[str, Any]:
-    """Discover plugins for an entry point group."""
+    """Discover and load plugins for an entry point group."""
     plugins: dict[str, Any] = {}
     try:
         entry_points = importlib.metadata.entry_points()
@@ -29,12 +42,3 @@ def discover_entry_points(group: str) -> dict[str, Any]:
     except Exception:
         return plugins
     return plugins
-
-
-def list_plugins() -> dict[str, list[str]]:
-    """List discovered plugin names by group."""
-    return {
-        "validators": sorted(discover_entry_points("contractmodel.validators")),
-        "exporters": sorted(discover_entry_points("contractmodel.exporters")),
-        "registries": sorted(discover_entry_points("contractmodel.registries")),
-    }

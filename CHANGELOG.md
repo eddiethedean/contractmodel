@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2
+
+- Add STABILITY.md and SECURITY.md; export ValidationMode, CompatibilityMode, ValidationWarningDetail from top-level package
+- Cache generated Pydantic validation models per contract and mode
+- Wire validator, exporter, and registry plugins into validate/export/publish paths
+- Align registry client with ContractHub publish endpoint and optional bearer auth
+- Harden ODCS auto-detection (`format: odcs`, stricter apiVersion heuristic)
+- Document experimental plugin/quality/registry APIs and performance limits in README
+
 ## 0.1.1
 
 - Fix validation engine bugs (generator uniqueness, duplicate errors, JSON handling)

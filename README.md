@@ -16,7 +16,7 @@ Python-native data contracts built on a **Canonical Contract Model (CCM)** and *
 - **Multi-format validation** — records, JSON, CSV, Parquet, Pandas, and Polars (optional extras)
 - **Contract diffing** — field-level changes with breaking-change classification and rename detection
 - **Exporters** — JSON Schema, OpenAPI, Markdown, ODCS, RDF, SHACL, OWL
-- **Plugin SDK** — entry-point discovery for validators, exporters, and registries
+- **Plugin SDK (experimental)** — entry-point hooks for validators, exporters, and registries
 - **CLI** — `init`, `validate`, `diff`, `generate`, `export`, `publish`, and `doctor`
 
 ## Installation
@@ -40,8 +40,7 @@ Requires Python 3.10+. The `contract` CLI is included in the base install.
 ## Quick start
 
 ```python
-from contractmodel import DataContract
-from contractmodel.core.types import ValidationMode
+from contractmodel import DataContract, ValidationMode
 
 contract = DataContract.from_odcs("examples/customer_events.odcs.yaml")
 CustomerEvent = contract.to_pydantic()
@@ -104,18 +103,26 @@ contract doctor
 | `STRICT` | Reject extra fields; full constraint validation |
 | `PERMISSIVE` | Allow extra fields |
 | `SCHEMA_ONLY` | Structure and types only |
-| `QUALITY_ONLY` | Run CCM quality rules (freshness, completeness) |
+| `QUALITY_ONLY` | Run CCM quality rules (completeness; freshness is a stub warning) |
 
-## Plugins
+## Performance
 
-Register plugins via `pyproject.toml` entry points:
+Validation loads full datasets into memory. For 0.1.x, keep files under **~100 MB** and **~1 million rows** unless you benchmark larger workloads. Call `to_pydantic()` once per contract and reuse the model class.
+
+## Plugins (experimental)
+
+Register plugins via `pyproject.toml` entry points. Installed plugins run after built-in validation and can extend export/publish when their `target` matches the requested format.
 
 ```toml
 [project.entry-points."contractmodel.validators"]
 my_validator = "my_package:MyValidator"
 ```
 
-Run `contract doctor` to list discovered plugins and optional dependencies.
+Run `contract doctor` to list plugin names (without loading plugin code). See [STABILITY.md](STABILITY.md) for API guarantees.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for registry trust, plugin install guidance, and data file limits.
 
 ## Architecture
 
@@ -125,7 +132,7 @@ All external representations flow through the CCM:
 ODCS / YAML / JSON  →  CCM  →  Pydantic / Validation / Diff / Export
 ```
 
-The CCM is format-agnostic. Adapters handle conversion; engines operate only on the canonical model. See [`docs/architecture/`](docs/architecture/) and [`docs/tutorials/`](docs/tutorials/) for details.
+The CCM is format-agnostic. Adapters handle conversion; engines operate only on the canonical model. See [`docs/architecture/`](docs/architecture/), [`docs/roadmap/03-data-contract-formats.md`](docs/roadmap/03-data-contract-formats.md), [`STABILITY.md`](STABILITY.md), and [`docs/tutorials/`](docs/tutorials/) for details.
 
 ## Development
 

@@ -16,7 +16,7 @@ from contractmodel.contract import DataContract
 from contractmodel.core.result import ValidationResult
 from contractmodel.core.types import CompatibilityMode, ValidationMode
 from contractmodel.errors import ContractPluginError, OptionalDependencyError, RegistryError
-from contractmodel.plugins.manager import list_plugins
+from contractmodel.plugins.runtime import list_plugins, run_exporter_plugin, run_registry_publish
 from contractmodel.registry.client import get_registry_url, publish_contract
 from contractmodel.validation.sarif import validation_result_to_sarif
 
@@ -44,7 +44,8 @@ def init(
         app_dir = path if path.suffix == "" else path.parent / path.stem
         app_dir.mkdir(parents=True, exist_ok=True)
         (app_dir / "main.py").write_text(
-            'from fastapi import FastAPI\n\nfrom contractmodel import DataContract\n\n'
+            "# Security: add authentication and CORS before exposing this API publicly.\n"
+            "from fastapi import FastAPI\n\nfrom contractmodel import DataContract\n\n"
             'app = FastAPI()\ncontract = DataContract.from_yaml("contract.yaml")\n\n\n'
             '@app.get("/schema")\ndef schema():\n    return contract.to_json_schema()\n'
         )
@@ -227,7 +228,15 @@ def export(
         raise typer.Exit(code=2) from exc
 
     try:
-        if to == "odcs":
+        plugin_content = run_exporter_plugin(contract.ccm, to)
+        if plugin_content is not None:
+            if isinstance(plugin_content, (dict, list)):
+                content = json.dumps(plugin_content, indent=2)
+            elif isinstance(plugin_content, bytes):
+                content = plugin_content.decode()
+            else:
+                content = str(plugin_content)
+        elif to == "odcs":
             content = yaml.safe_dump(contract.to_odcs(), sort_keys=False)
         elif to == "markdown":
             content = contract.to_markdown()
@@ -247,6 +256,9 @@ def export(
     except OptionalDependencyError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=3) from exc
+    except ContractPluginError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=4) from exc
 
     if output:
         output.write_text(content)
@@ -267,8 +279,12 @@ def publish(
         if not registry_url:
             typer.echo("Registry URL not configured", err=True)
             raise typer.Exit(code=5)
-        result = publish_contract(contract.ccm, registry_url)
-        typer.echo(f"Published {result.contract_id}@{result.version} to {result.registry_url}")
+        plugin_result = run_registry_publish(contract.ccm, registry_url)
+        if plugin_result is not None:
+            typer.echo(f"Published via registry plugin to {registry_url}")
+        else:
+            result = publish_contract(contract.ccm, registry_url)
+            typer.echo(f"Published {result.contract_id}@{result.version} to {result.registry_url}")
     except typer.Exit:
         raise
     except RegistryError as exc:

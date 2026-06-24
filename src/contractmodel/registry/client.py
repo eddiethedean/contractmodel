@@ -1,4 +1,4 @@
-"""Registry client."""
+"""Registry client for ContractHub-compatible HTTP APIs."""
 
 from __future__ import annotations
 
@@ -26,18 +26,34 @@ def get_registry_url() -> str | None:
     return os.environ.get("CONTRACT_REGISTRY_URL")
 
 
+def get_registry_token() -> str | None:
+    """Return bearer token for registry authentication."""
+    return os.environ.get("CONTRACT_REGISTRY_TOKEN")
+
+
+def _request_headers() -> dict[str, str]:
+    headers = {"Content-Type": "application/json"}
+    token = get_registry_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def publish_contract(contract: CanonicalContract, registry_url: str) -> RegistryPublishResult:
-    """Publish a contract to a registry endpoint."""
+    """Publish a contract version to a ContractHub-compatible registry."""
     payload = json.dumps(contract.model_dump(mode="json", by_alias=True)).encode()
+    url = f"{registry_url.rstrip('/')}/contracts/{contract.contract_id}/versions"
     request = urllib.request.Request(
-        f"{registry_url.rstrip('/')}/contracts",
+        url,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers=_request_headers(),
         method="POST",
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             status = str(response.status)
+            if response.status >= 400:
+                raise RegistryError(f"Registry rejected publish with status {response.status}")
     except urllib.error.URLError as exc:
         raise RegistryError(f"Failed to publish contract: {exc}") from exc
 
@@ -54,12 +70,13 @@ def fetch_contract(
     contract_id: str,
     version: str | None = None,
 ) -> CanonicalContract:
-    """Fetch a contract from a registry endpoint."""
+    """Fetch a contract from a ContractHub-compatible registry."""
     path = f"{registry_url.rstrip('/')}/contracts/{contract_id}"
     if version:
         path = f"{path}/versions/{version}"
+    request = urllib.request.Request(path, headers=_request_headers(), method="GET")
     try:
-        with urllib.request.urlopen(path, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=30) as response:
             data: dict[str, Any] = json.loads(response.read().decode())
     except urllib.error.URLError as exc:
         raise RegistryError(f"Failed to fetch contract: {exc}") from exc

@@ -75,8 +75,15 @@ _ODCS_FIELD_RESERVED = frozenset(
 
 def is_odcs_document(data: dict[str, Any]) -> bool:
     """Return True when the document looks like ODCS."""
-    return data.get("kind") == "DataContract" or (
-        "apiVersion" in data and "contract_id" not in data
+    if data.get("format") == "odcs":
+        return True
+    if data.get("kind") == "DataContract":
+        return True
+    return (
+        "apiVersion" in data
+        and "contract_id" not in data
+        and "id" in data
+        and isinstance(data.get("schema"), list)
     )
 
 
