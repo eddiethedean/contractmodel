@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.2 — 2026-06-24
+
 ### API improvements
 
 - Generated Pydantic models now consistently subclass `ContractModel`; unified model cache shared by `to_pydantic()` and `validate_*`
@@ -10,6 +12,15 @@
 - Export `LogicalType`, `ChangeType`, and exception types from top-level package
 - `FieldChange.change_type` is now a `ChangeType` enum; `validate_csv`/`validate_parquet` use typed `read_*_kwargs`
 - Add method docstrings on `DataContract`; sync public API specification and reference docs
+
+### Stabilization
+
+- Add STABILITY.md and SECURITY.md; export `ValidationMode`, `CompatibilityMode`, `ValidationWarningDetail` from top-level package
+- Cache generated Pydantic validation models per contract and mode
+- Wire validator, exporter, and registry plugins into validate/export/publish paths
+- Align registry client with ContractHub publish endpoint and optional bearer auth
+- Harden ODCS auto-detection (`format: odcs`, stricter apiVersion heuristic)
+- Document experimental plugin/quality/registry APIs and performance limits in README
 
 ### Documentation and packaging
 
@@ -22,14 +33,17 @@
 - Add PyPI metadata (urls, license, classifiers, keywords)
 - Move `MANIFEST.json` to `docs/internal/`
 
-## 0.1.2
+### Bug fixes
 
-- Add STABILITY.md and SECURITY.md; export ValidationMode, CompatibilityMode, ValidationWarningDetail from top-level package
-- Cache generated Pydantic validation models per contract and mode
-- Wire validator, exporter, and registry plugins into validate/export/publish paths
-- Align registry client with ContractHub publish endpoint and optional bearer auth
-- Harden ODCS auto-detection (`format: odcs`, stricter apiVersion heuristic)
-- Document experimental plugin/quality/registry APIs and performance limits in README
+- Sanitize example path helpers against directory traversal and absolute paths
+- Handle unhashable values in uniqueness validation without `TypeError`
+- Validate ODCS schema list items are objects; tighten ODCS document auto-detection
+- Reject empty enum definitions at ODCS import and Pydantic generation
+- Recompute validation metrics after uniqueness errors
+- Add optional `max_bytes` / `max_rows` limits on validation entry points
+- Bound registry fetch response size; URL-encode contract IDs in registry paths
+- Parse ODCS `owner.contact` list and dict structures correctly
+- Cache plugin discovery to avoid re-importing entry points on every validation
 
 ## 0.1.1
 
