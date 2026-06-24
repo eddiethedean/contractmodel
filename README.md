@@ -88,6 +88,9 @@ result = contract.validate_record(
 )
 
 print(result.success)  # True
+
+# Optional payload limits (max_bytes for serialized JSON/files, max_rows for record batches)
+limited = contract.validate_json(payload, max_bytes=1_000_000, max_rows=10_000)
 ```
 
 From a git clone you can also use repository paths (`examples/...`). See [examples/README.md](examples/README.md).

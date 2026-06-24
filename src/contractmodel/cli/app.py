@@ -29,12 +29,23 @@ class OutputFormat(str, Enum):
     SARIF = "sarif"
 
 
+_VALID_INIT_TEMPLATES = frozenset({"ccm", "odcs", "fastapi"})
+
+
 @app.command()
 def init(
     path: Path = typer.Argument(Path("contract.yaml")),
     template: str = typer.Option("ccm", "--template", help="Template: ccm, odcs, or fastapi"),
 ) -> None:
     """Initialize a new contract file."""
+    if template not in _VALID_INIT_TEMPLATES:
+        typer.echo(
+            f"Unknown template: {template!r}. "
+            f"Choose from: {', '.join(sorted(_VALID_INIT_TEMPLATES))}",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
     if path.exists():
         typer.echo(f"File already exists: {path}", err=True)
         raise typer.Exit(code=3)
@@ -101,7 +112,7 @@ def validate(
 ) -> None:
     """Validate data against a contract."""
     try:
-        contract = DataContract.from_yaml(contract_path)
+        contract = DataContract.load(contract_path)
     except Exception as exc:
         typer.echo(f"Invalid contract: {exc}", err=True)
         raise typer.Exit(code=2) from exc
@@ -149,8 +160,8 @@ def diff(
 ) -> None:
     """Diff two contract versions."""
     try:
-        old_contract = DataContract.from_yaml(old_path)
-        new_contract = DataContract.from_yaml(new_path)
+        old_contract = DataContract.load(old_path)
+        new_contract = DataContract.load(new_path)
     except Exception as exc:
         typer.echo(f"Invalid contract: {exc}", err=True)
         raise typer.Exit(code=2) from exc
@@ -181,6 +192,15 @@ def diff(
     else:
         typer.echo(f"Diff {result.source_version} -> {result.target_version}")
         typer.echo(f"Breaking: {result.is_breaking}")
+        if result.added_fields:
+            typer.echo(f"Added: {', '.join(result.added_fields)}")
+        if result.removed_fields:
+            typer.echo(f"Removed: {', '.join(result.removed_fields)}")
+        if result.changed_fields:
+            changed = ", ".join(
+                f"{change.field} ({change.change_type.value})" for change in result.changed_fields
+            )
+            typer.echo(f"Changed: {changed}")
         for breaking_change in result.breaking_changes:
             typer.echo(f"  BREAKING: {breaking_change.message}")
         for non_breaking_change in result.non_breaking_changes:
@@ -202,7 +222,7 @@ def generate(
         raise typer.Exit(code=2)
 
     try:
-        contract = DataContract.from_yaml(contract_path)
+        contract = DataContract.load(contract_path)
         model = contract.to_pydantic(class_name=class_name)
     except Exception as exc:
         typer.echo(f"Generation failed: {exc}", err=True)
@@ -221,18 +241,19 @@ def export(
 ) -> None:
     """Export a contract to another format."""
     try:
-        contract = DataContract.from_yaml(contract_path)
+        contract = DataContract.load(contract_path)
     except Exception as exc:
         typer.echo(f"Invalid contract: {exc}", err=True)
         raise typer.Exit(code=2) from exc
 
     try:
         plugin_content = run_exporter_plugin(contract.ccm, to)
+        content: str | bytes
         if plugin_content is not None:
-            if isinstance(plugin_content, (dict, list)):
+            if isinstance(plugin_content, bytes):
+                content = plugin_content
+            elif isinstance(plugin_content, (dict, list)):
                 content = json.dumps(plugin_content, indent=2)
-            elif isinstance(plugin_content, bytes):
-                content = plugin_content.decode()
             else:
                 content = str(plugin_content)
         elif to == "odcs":
@@ -258,12 +279,21 @@ def export(
     except ContractPluginError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=4) from exc
+    except Exception as exc:
+        typer.echo(f"Export failed: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
 
     if output:
-        output.write_text(content)
+        if isinstance(content, bytes):
+            output.write_bytes(content)
+        else:
+            output.write_text(content)
         typer.echo(f"Wrote {output}")
     else:
-        typer.echo(content)
+        if isinstance(content, bytes):
+            typer.echo(content.decode("utf-8", errors="replace"))
+        else:
+            typer.echo(content)
 
 
 @app.command()
@@ -273,7 +303,7 @@ def publish(
 ) -> None:
     """Publish a contract to a registry."""
     try:
-        contract = DataContract.from_yaml(contract_path)
+        contract = DataContract.load(contract_path)
         registry_url = registry or get_registry_url()
         if not registry_url:
             typer.echo("Registry URL not configured", err=True)

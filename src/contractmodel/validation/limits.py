@@ -7,6 +7,28 @@ from pathlib import Path
 from contractmodel.core.result import ValidationErrorDetail, ValidationResult
 
 
+def empty_metrics() -> dict[str, int]:
+    return {
+        "records_total": 0,
+        "records_valid": 0,
+        "records_invalid": 0,
+    }
+
+
+def validate_limit_params(
+    *,
+    max_bytes: int | None = None,
+    max_rows: int | None = None,
+) -> None:
+    """Raise when limit parameters are non-positive."""
+    if max_bytes is not None and max_bytes <= 0:
+        msg = f"max_bytes must be positive, got {max_bytes}"
+        raise ValueError(msg)
+    if max_rows is not None and max_rows <= 0:
+        msg = f"max_rows must be positive, got {max_rows}"
+        raise ValueError(msg)
+
+
 def limit_exceeded_result(message: str) -> ValidationResult:
     return ValidationResult(
         success=False,
@@ -17,6 +39,7 @@ def limit_exceeded_result(message: str) -> ValidationResult:
                 message=message,
             )
         ],
+        metrics=empty_metrics(),
     )
 
 

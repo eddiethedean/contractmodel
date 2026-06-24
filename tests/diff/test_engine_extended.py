@@ -123,4 +123,4 @@ def test_rules_loosening_and_full_add() -> None:
         }
     ).contract_schema.fields[0]
     assert is_added_field_breaking(field, mode=CompatibilityMode.FULL) is True
-    assert is_removed_field_breaking(field, mode=CompatibilityMode.FORWARD) is False
+    assert is_removed_field_breaking(field, mode=CompatibilityMode.FORWARD) is True

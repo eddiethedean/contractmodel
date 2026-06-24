@@ -98,6 +98,8 @@ class DataContract:
         *,
         format: str = "auto",
         mode: ValidationMode = ValidationMode.STRICT,
+        max_bytes: int | None = None,
+        max_rows: int | None = None,
     ) -> ValidationResult: ...
 
     def validate_record(
@@ -112,6 +114,7 @@ class DataContract:
         records: Iterable[Mapping[str, Any]],
         *,
         mode: ValidationMode = ValidationMode.STRICT,
+        max_rows: int | None = None,
     ) -> ValidationResult: ...
 
     def validate_json(
@@ -119,6 +122,8 @@ class DataContract:
         data: str | bytes | Mapping[str, Any] | list[Mapping[str, Any]],
         *,
         mode: ValidationMode = ValidationMode.STRICT,
+        max_bytes: int | None = None,
+        max_rows: int | None = None,
     ) -> ValidationResult: ...
 
     def validate_csv(
@@ -127,6 +132,8 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
         read_csv_kwargs: dict[str, Any] | None = None,
+        max_bytes: int | None = None,
+        max_rows: int | None = None,
     ) -> ValidationResult: ...
 
     def validate_parquet(
@@ -135,11 +142,25 @@ class DataContract:
         *,
         mode: ValidationMode = ValidationMode.STRICT,
         read_parquet_kwargs: dict[str, Any] | None = None,
+        max_bytes: int | None = None,
+        max_rows: int | None = None,
     ) -> ValidationResult: ...
 
-    def validate_pandas(self, df: Any, *, mode: ValidationMode = ValidationMode.STRICT) -> ValidationResult: ...
+    def validate_pandas(
+        self,
+        df: Any,
+        *,
+        mode: ValidationMode = ValidationMode.STRICT,
+        max_rows: int | None = None,
+    ) -> ValidationResult: ...
 
-    def validate_polars(self, df: Any, *, mode: ValidationMode = ValidationMode.STRICT) -> ValidationResult: ...
+    def validate_polars(
+        self,
+        df: Any,
+        *,
+        mode: ValidationMode = ValidationMode.STRICT,
+        max_rows: int | None = None,
+    ) -> ValidationResult: ...
 
     def diff(
         self,

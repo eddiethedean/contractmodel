@@ -79,7 +79,7 @@ def diff_contracts(
 
     removed_map = {name: source_fields[name] for name in removed_names}
     added_map = {name: target_fields[name] for name in added_names}
-    paired_removed, paired_added, rename_messages = detect_renames(removed_map, added_map)
+    paired_removed, paired_added, rename_pairs = detect_renames(removed_map, added_map)
 
     added = sorted(added_names - paired_added)
     removed = sorted(removed_names - paired_removed)
@@ -88,11 +88,25 @@ def diff_contracts(
     breaking: list[BreakingChange] = []
     non_breaking: list[NonBreakingChange] = []
 
-    for message in rename_messages:
-        if "renamed" in message:
-            non_breaking.append(NonBreakingChange(code="FIELD_RENAMED", message=message))
+    for old_name, new_name, old_field, new_field in rename_pairs:
+        rename_message = f"Field '{old_name}' renamed to '{new_name}' via alias"
+        if old_field == new_field:
+            non_breaking.append(
+                NonBreakingChange(code="FIELD_RENAMED", message=rename_message, field=new_name)
+            )
         else:
-            breaking.append(BreakingChange(code="FIELD_RENAMED", message=message))
+            non_breaking.append(
+                NonBreakingChange(code="FIELD_RENAMED", message=rename_message, field=new_name)
+            )
+            _diff_field_pair(
+                new_name,
+                old_field,
+                new_field,
+                mode=mode,
+                changed_fields=changed_fields,
+                breaking=breaking,
+                non_breaking=non_breaking,
+            )
 
     for name in removed:
         field = source_fields[name]

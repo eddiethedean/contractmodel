@@ -69,6 +69,9 @@ def run_exporter_plugin(
             exported = plugin.export(contract)
         except Exception as exc:
             raise ContractPluginError(f"Exporter plugin '{name}' failed") from exc
+        if exported is None:
+            msg = f"Exporter plugin '{name}' returned no content"
+            raise ContractPluginError(msg)
         return cast(str | bytes | dict[str, Any], exported)
     return None
 
@@ -80,6 +83,8 @@ def run_registry_publish(contract: CanonicalContract, registry_url: str) -> Any 
         return None
     name, plugin = next(iter(plugins.items()))
     try:
+        return plugin.publish(contract, registry_url)
+    except TypeError:
         return plugin.publish(contract)
     except Exception as exc:
         raise ContractPluginError(f"Registry plugin '{name}' failed") from exc

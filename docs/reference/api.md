@@ -23,8 +23,10 @@ from contractmodel import (
     FieldChange,
     ChangeType,
     ContractModelError,
+    ContractPluginError,
     OptionalDependencyError,
     OdcsImportError,
+    RegistryError,
     examples,
     __version__,
 )
@@ -61,14 +63,16 @@ from contractmodel import (
 
 | Method | Description |
 |--------|-------------|
-| `validate(path, format=auto, mode=STRICT)` | Validate a data file (extension-based auto format) |
+| `validate(path, format=auto, mode=STRICT, max_bytes=None, max_rows=None)` | Validate a data file (extension-based auto format) |
 | `validate_record(record, mode=STRICT)` | Single mapping |
-| `validate_records(records, mode=STRICT)` | Iterable of mappings |
-| `validate_json(data, mode=STRICT)` | JSON string/bytes or dict/list |
-| `validate_csv(path, mode=STRICT, read_csv_kwargs=None)` | CSV — requires `[pandas]` |
-| `validate_parquet(path, mode=STRICT, read_parquet_kwargs=None)` | Parquet — requires `[parquet]` |
-| `validate_pandas(df, mode=STRICT)` | Pandas DataFrame — requires `[pandas]` |
-| `validate_polars(df, mode=STRICT)` | Polars DataFrame — requires `[polars]` |
+| `validate_records(records, mode=STRICT, max_rows=None)` | Iterable of mappings |
+| `validate_json(data, mode=STRICT, max_bytes=None, max_rows=None)` | JSON string/bytes or dict/list |
+| `validate_csv(path, mode=STRICT, read_csv_kwargs=None, max_bytes=None, max_rows=None)` | CSV — requires `[pandas]` |
+| `validate_parquet(path, mode=STRICT, read_parquet_kwargs=None, max_bytes=None, max_rows=None)` | Parquet — requires `[parquet]` |
+| `validate_pandas(df, mode=STRICT, max_rows=None)` | Pandas DataFrame — requires `[pandas]` |
+| `validate_polars(df, mode=STRICT, max_rows=None)` | Polars DataFrame — requires `[polars]` |
+
+Optional `max_bytes` and `max_rows` guard validation entry points against oversized payloads. Non-positive limits raise `ValueError`. File and parse failures return a failed `ValidationResult` with `CM_RUNTIME_ERROR` instead of raising.
 
 ### Diff and export
 

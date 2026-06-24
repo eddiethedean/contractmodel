@@ -53,7 +53,7 @@ contractmodel/
         rdf.py
         shacl.py
         owl.py
-      examples_data/       # Populated in wheel from examples/ via hatch force-include
+      examples_data/       # Mirror of repository examples/ (shipped in wheel)
   tests/
   examples/
     README.md
@@ -88,4 +88,4 @@ Dev tools are in `[dependency-groups] dev` (pytest, ruff, mypy, pre-commit, mkdo
 
 ## Examples packaging
 
-Repository `examples/` is mirrored at `src/contractmodel/examples_data/` for wheel and editable installs. Keep both in sync when adding examples. Use `contractmodel.examples.load_example()` after `pip install`.
+Repository `examples/` must be kept in sync with `src/contractmodel/examples_data/` manually (see `tests/test_examples.py::test_examples_dirs_stay_in_sync`). Use `contractmodel.examples.load_example()` after `pip install`.

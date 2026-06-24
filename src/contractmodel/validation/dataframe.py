@@ -10,7 +10,11 @@ from contractmodel.core.result import ValidationErrorDetail, ValidationResult
 from contractmodel.core.types import ValidationMode
 from contractmodel.errors import OptionalDependencyError
 from contractmodel.validation.engine import validate_records
-from contractmodel.validation.limits import check_row_limit
+from contractmodel.validation.limits import (
+    check_row_limit,
+    limit_exceeded_result,
+    validate_limit_params,
+)
 
 
 def validate_csv(
@@ -22,8 +26,18 @@ def validate_csv(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a CSV file against a contract."""
-    pd = _import_pandas()
-    df = pd.read_csv(path, **(read_csv_kwargs or {}))
+    validate_limit_params(max_rows=max_rows)
+    try:
+        pd = _import_pandas()
+        df = pd.read_csv(path, **(read_csv_kwargs or {}))
+    except OptionalDependencyError:
+        raise
+    except OSError as exc:
+        return limit_exceeded_result(f"Failed to read CSV file: {exc}")
+    except UnicodeDecodeError as exc:
+        return limit_exceeded_result(f"Failed to decode CSV file: {exc}")
+    except Exception as exc:
+        return limit_exceeded_result(f"Failed to parse CSV file: {exc}")
     return validate_pandas(contract, df, mode=mode, max_rows=max_rows)
 
 
@@ -36,12 +50,20 @@ def validate_parquet(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Parquet file against a contract."""
-    pd = _import_pandas()
+    validate_limit_params(max_rows=max_rows)
     try:
-        import pyarrow  # noqa: F401
-    except ImportError as exc:
-        raise OptionalDependencyError("parquet") from exc
-    df = pd.read_parquet(path, **(read_parquet_kwargs or {}))
+        pd = _import_pandas()
+        try:
+            import pyarrow  # noqa: F401
+        except ImportError as exc:
+            raise OptionalDependencyError("parquet") from exc
+        df = pd.read_parquet(path, **(read_parquet_kwargs or {}))
+    except OptionalDependencyError:
+        raise
+    except OSError as exc:
+        return limit_exceeded_result(f"Failed to read Parquet file: {exc}")
+    except Exception as exc:
+        return limit_exceeded_result(f"Failed to parse Parquet file: {exc}")
     return validate_pandas(contract, df, mode=mode, max_rows=max_rows)
 
 
@@ -53,6 +75,7 @@ def validate_pandas(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Pandas DataFrame against a contract."""
+    validate_limit_params(max_rows=max_rows)
     pd = _import_pandas()
     if not isinstance(df, pd.DataFrame):
         msg = "Expected a pandas.DataFrame"
@@ -90,6 +113,7 @@ def validate_polars(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate a Polars DataFrame against a contract."""
+    validate_limit_params(max_rows=max_rows)
     pl = _import_polars()
     if not isinstance(df, pl.DataFrame):
         msg = "Expected a polars.DataFrame"

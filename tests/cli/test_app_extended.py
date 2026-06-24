@@ -14,6 +14,25 @@ runner = CliRunner()
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples"
 
 
+def test_init_unknown_template(tmp_path: Path) -> None:
+    path = tmp_path / "contract.yaml"
+    result = runner.invoke(app, ["init", str(path), "--template", "unknown"])
+    assert result.exit_code == 2
+    assert "Unknown template" in result.stderr
+
+
+def test_validate_json_contract_file(tmp_path: Path) -> None:
+    import yaml
+
+    contract_data = yaml.safe_load((EXAMPLES_DIR / "customer_events.ccm.yaml").read_text())
+    contract_path = tmp_path / "contract.json"
+    contract_path.write_text(json.dumps(contract_data))
+    data_path = tmp_path / "event.json"
+    data_path.write_text((EXAMPLES_DIR / "data" / "customer_event.json").read_text())
+    result = runner.invoke(app, ["validate", str(contract_path), str(data_path)])
+    assert result.exit_code == 0
+
+
 def test_init_fastapi_template(tmp_path: Path) -> None:
     app_dir = tmp_path / "myapp"
     result = runner.invoke(app, ["init", str(app_dir), "--template", "fastapi"])
@@ -89,6 +108,35 @@ def test_diff_markdown_output() -> None:
     result = runner.invoke(app, ["diff", str(old_path), str(old_path), "--output", "markdown"])
     assert result.exit_code == 0
     assert "# Contract Diff" in result.stdout
+
+
+def test_diff_text_summary(tmp_path: Path) -> None:
+    import yaml
+
+    old = {
+        "contract_id": "diff",
+        "name": "Diff",
+        "version": "1.0.0",
+        "schema": {"fields": [{"name": "a", "logical_type": "string"}]},
+    }
+    new = {
+        "contract_id": "diff",
+        "name": "Diff",
+        "version": "2.0.0",
+        "schema": {
+            "fields": [
+                {"name": "b", "logical_type": "string", "required": True},
+            ]
+        },
+    }
+    old_path = tmp_path / "old.yaml"
+    new_path = tmp_path / "new.yaml"
+    old_path.write_text(yaml.safe_dump(old, sort_keys=False))
+    new_path.write_text(yaml.safe_dump(new, sort_keys=False))
+    result = runner.invoke(app, ["diff", str(old_path), str(new_path)])
+    assert result.exit_code == 1
+    assert "Added: b" in result.stdout
+    assert "Removed: a" in result.stdout
 
 
 def test_export_formats(tmp_path: Path) -> None:

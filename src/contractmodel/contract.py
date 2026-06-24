@@ -20,6 +20,7 @@ from contractmodel.core.ccm import CanonicalContract, ContractField, ContractSch
 from contractmodel.core.result import ValidationResult, ValidationWarningDetail
 from contractmodel.core.types import CompatibilityMode, ContractKind, ContractStatus, ValidationMode
 from contractmodel.diff.engine import ContractDiff, diff_contracts
+from contractmodel.errors import OptionalDependencyError
 from contractmodel.export.json_schema import export_json_schema
 from contractmodel.export.markdown import export_markdown
 from contractmodel.export.openapi import export_openapi
@@ -30,7 +31,11 @@ from contractmodel.semantic.rdf import export_rdf
 from contractmodel.semantic.shacl import export_shacl
 from contractmodel.validation import dataframe as dataframe_validation
 from contractmodel.validation import engine as validation_engine
-from contractmodel.validation.limits import check_file_byte_limit
+from contractmodel.validation.limits import (
+    check_file_byte_limit,
+    limit_exceeded_result,
+    validate_limit_params,
+)
 
 
 class DataContract:
@@ -205,34 +210,42 @@ class DataContract:
 
         Supports ``.csv``, ``.parquet``, and ``.json`` (default for other extensions).
         """
+        validate_limit_params(max_bytes=max_bytes, max_rows=max_rows)
         data_path = Path(path)
-        file_limit = check_file_byte_limit(data_path, max_bytes)
-        if file_limit is not None:
-            return file_limit
+        try:
+            file_limit = check_file_byte_limit(data_path, max_bytes)
+            if file_limit is not None:
+                return file_limit
 
-        suffix = data_path.suffix.lower()
-        resolved_format = format
-        if resolved_format == "auto":
-            if suffix == ".csv":
-                resolved_format = "csv"
-            elif suffix == ".parquet":
-                resolved_format = "parquet"
-            else:
-                resolved_format = "json"
+            suffix = data_path.suffix.lower()
+            resolved_format = format
+            if resolved_format == "auto":
+                if suffix == ".csv":
+                    resolved_format = "csv"
+                elif suffix == ".parquet":
+                    resolved_format = "parquet"
+                else:
+                    resolved_format = "json"
 
-        if resolved_format == "csv":
-            return self.validate_csv(data_path, mode=mode, max_rows=max_rows)
-        if resolved_format == "parquet":
-            return self.validate_parquet(data_path, mode=mode, max_rows=max_rows)
-        if resolved_format == "json":
-            return self.validate_json(
-                data_path.read_text(encoding="utf-8"),
-                mode=mode,
-                max_bytes=max_bytes,
-                max_rows=max_rows,
-            )
-        msg = f"Unsupported data format: {resolved_format}"
-        raise ValueError(msg)
+            if resolved_format == "csv":
+                return self.validate_csv(data_path, mode=mode, max_rows=max_rows)
+            if resolved_format == "parquet":
+                return self.validate_parquet(data_path, mode=mode, max_rows=max_rows)
+            if resolved_format == "json":
+                return self.validate_json(
+                    data_path.read_text(encoding="utf-8"),
+                    mode=mode,
+                    max_bytes=max_bytes,
+                    max_rows=max_rows,
+                )
+            msg = f"Unsupported data format: {resolved_format}"
+            raise ValueError(msg)
+        except ValueError:
+            raise
+        except OSError as exc:
+            return limit_exceeded_result(f"Failed to read data file: {exc}")
+        except UnicodeDecodeError as exc:
+            return limit_exceeded_result(f"Failed to decode data file: {exc}")
 
     def validate_record(
         self,
@@ -252,6 +265,7 @@ class DataContract:
         max_rows: int | None = None,
     ) -> ValidationResult:
         """Validate an iterable of records (materialized in memory)."""
+        validate_limit_params(max_rows=max_rows)
         record_list = list(records)
         result = validation_engine.validate_records(
             self._ccm,
@@ -270,6 +284,7 @@ class DataContract:
         max_rows: int | None = None,
     ) -> ValidationResult:
         """Validate JSON string/bytes, a dict, or a list of dicts."""
+        validate_limit_params(max_bytes=max_bytes, max_rows=max_rows)
         result = validation_engine.validate_json(
             self._ccm,
             data,
@@ -295,16 +310,24 @@ class DataContract:
         max_rows: int | None = None,
     ) -> ValidationResult:
         """Validate a CSV file (requires ``contractmodel[pandas]``)."""
-        file_limit = check_file_byte_limit(path, max_bytes)
-        if file_limit is not None:
-            return file_limit
-        result = dataframe_validation.validate_csv(
-            self._ccm,
-            path,
-            mode=mode,
-            read_csv_kwargs=read_csv_kwargs,
-            max_rows=max_rows,
-        )
+        validate_limit_params(max_bytes=max_bytes, max_rows=max_rows)
+        try:
+            file_limit = check_file_byte_limit(path, max_bytes)
+            if file_limit is not None:
+                return file_limit
+            result = dataframe_validation.validate_csv(
+                self._ccm,
+                path,
+                mode=mode,
+                read_csv_kwargs=read_csv_kwargs,
+                max_rows=max_rows,
+            )
+        except OptionalDependencyError:
+            raise
+        except OSError as exc:
+            return limit_exceeded_result(f"Failed to read CSV file: {exc}")
+        except UnicodeDecodeError as exc:
+            return limit_exceeded_result(f"Failed to decode CSV file: {exc}")
         return run_validator_plugins(self._ccm, str(path), result)
 
     def validate_parquet(
@@ -317,16 +340,22 @@ class DataContract:
         max_rows: int | None = None,
     ) -> ValidationResult:
         """Validate a Parquet file (requires ``contractmodel[parquet]``)."""
-        file_limit = check_file_byte_limit(path, max_bytes)
-        if file_limit is not None:
-            return file_limit
-        result = dataframe_validation.validate_parquet(
-            self._ccm,
-            path,
-            mode=mode,
-            read_parquet_kwargs=read_parquet_kwargs,
-            max_rows=max_rows,
-        )
+        validate_limit_params(max_bytes=max_bytes, max_rows=max_rows)
+        try:
+            file_limit = check_file_byte_limit(path, max_bytes)
+            if file_limit is not None:
+                return file_limit
+            result = dataframe_validation.validate_parquet(
+                self._ccm,
+                path,
+                mode=mode,
+                read_parquet_kwargs=read_parquet_kwargs,
+                max_rows=max_rows,
+            )
+        except OptionalDependencyError:
+            raise
+        except OSError as exc:
+            return limit_exceeded_result(f"Failed to read Parquet file: {exc}")
         return run_validator_plugins(self._ccm, str(path), result)
 
     def validate_pandas(

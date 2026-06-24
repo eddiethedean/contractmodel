@@ -19,6 +19,10 @@ def _dev_examples_dir() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "examples"
 
 
+def _bundled_examples_root() -> Any:
+    return importlib.resources.files("contractmodel").joinpath("examples_data")
+
+
 def _validate_example_name(name: str) -> None:
     """Reject paths that escape the examples bundle or repository directory."""
     if not name or name.startswith("/") or name.startswith("\\"):
@@ -43,11 +47,15 @@ def _assert_within_root(path: Path, root: Path) -> None:
 
 def _bundled_file(name: str) -> Any:
     _validate_example_name(name)
-    root = importlib.resources.files("contractmodel").joinpath("examples_data")
+    root = _bundled_examples_root()
     ref: Any = root
     for part in Path(name).parts:
         ref = ref.joinpath(part)
-    return ref
+    try:
+        return ref
+    except (FileNotFoundError, ModuleNotFoundError, TypeError) as exc:
+        msg = f"Unknown example: {name!r}"
+        raise ValueError(msg) from exc
 
 
 def read_example_text(name: str) -> str:
@@ -58,7 +66,11 @@ def read_example_text(name: str) -> str:
     if dev_path.is_file():
         _assert_within_root(dev_path, dev_root)
         return dev_path.read_text(encoding="utf-8")
-    return str(_bundled_file(name).read_text(encoding="utf-8"))
+    try:
+        return str(_bundled_file(name).read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, AttributeError) as exc:
+        msg = f"Unknown example: {name!r}"
+        raise ValueError(msg) from exc
 
 
 @lru_cache(maxsize=32)
@@ -86,13 +98,18 @@ def example_path(name: str) -> Path:
 
 def list_examples() -> list[str]:
     """List bundled example contract and data filenames."""
-    return [
-        "customer_events.ccm.yaml",
-        "customer_events.odcs.yaml",
-        "nested_schema.ccm.yaml",
-        "data/customer_event.json",
-        "data/events.csv",
-    ]
+    names: list[str] = []
+
+    def _walk(root: Any, prefix: str = "") -> None:
+        for item in sorted(root.iterdir(), key=lambda entry: entry.name):
+            rel = f"{prefix}{item.name}" if not prefix else f"{prefix}/{item.name}"
+            if item.is_dir():
+                _walk(item, rel)
+            elif item.name != "README.md":
+                names.append(rel)
+
+    _walk(_bundled_examples_root())
+    return names
 
 
 def load_example(name: str) -> DataContract:

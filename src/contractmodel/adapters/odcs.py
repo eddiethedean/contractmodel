@@ -73,6 +73,25 @@ _ODCS_FIELD_RESERVED = frozenset(
 )
 
 
+def _coerce_bool(value: Any, default: bool) -> bool:
+    """Coerce ODCS boolean fields from YAML/JSON loose types."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "1"}:
+            return True
+        if normalized in {"false", "no", "0"}:
+            return False
+        msg = f"Invalid boolean value: {value!r}"
+        raise OdcsImportError(msg)
+    return bool(value)
+
+
 def is_odcs_document(data: dict[str, Any]) -> bool:
     """Return True when the document looks like ODCS."""
     if data.get("format") == "odcs":
@@ -239,8 +258,8 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
     return ContractField(
         name=field_data["name"],
         logical_type=logical_type,
-        required=field_data.get("required", True),
-        nullable=field_data.get("nullable", False),
+        required=_coerce_bool(field_data.get("required"), True),
+        nullable=_coerce_bool(field_data.get("nullable"), False),
         description=field_data.get("description"),
         aliases=field_data.get("aliases", []),
         default=field_data.get("default"),
@@ -261,7 +280,7 @@ def _import_constraints(
         min_length=field_data.get("minLength", field_data.get("min_length")),
         max_length=field_data.get("maxLength", field_data.get("max_length")),
         pattern=field_data.get("pattern"),
-        unique=bool(field_data.get("unique", False)),
+        unique=_coerce_bool(field_data.get("unique"), False),
         enum_values=enum_values,
     )
 

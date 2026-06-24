@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Bug fixes and hardening (0.1.2 patch)
+
+- Fix Pydantic reverse adapter dropping zero-valued constraints (`ge=0`, `min_length=0`)
+- Fix PERMISSIVE mode for nested object extra fields
+- Fix JSON array validation row indices and metrics reconciliation
+- Coerce ODCS boolean fields safely; diff renamed fields with definition changes
+- Align FORWARD compatibility: required field removal is breaking
+- Forward `registry_url` to registry plugins; wrap registry fetch parse errors
+- Return `ValidationResult` for file/IO failures; validate non-positive `max_bytes`/`max_rows`
+- CLI: `DataContract.load`, template validation, binary export output, richer diff text
+- Examples: `ValueError` for unknown names; derive `list_examples()` from bundle
+- Add PEP 561 `py.typed` marker
+
+### Known limitations (deferred to 0.2.0+)
+
+- `FULL` compatibility mode aliases `BACKWARD` only
+- Schema-level diff for quality, governance, semantics, and indexes
+- Lossy ODCS import/export for non-schema sections
+- `QUALITY_ONLY` still runs dataset uniqueness checks
 ## 0.1.2 — 2026-06-24
 
 ### API improvements

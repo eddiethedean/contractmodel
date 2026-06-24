@@ -56,6 +56,7 @@ def generate_pydantic_model(
         contract.contract_schema.fields,
         model_name,
         schema_only=schema_only,
+        forbid_extra=forbid_extra,
     )
     if forbid_extra:
         base: type[BaseModel] = ContractModel
@@ -98,10 +99,16 @@ def _build_field_definitions(
     model_name: str,
     *,
     schema_only: bool = False,
+    forbid_extra: bool = True,
 ) -> dict[str, Any]:
     field_defs: dict[str, Any] = {}
     for field in fields:
-        field_defs[field.name] = _build_single_field(field, model_name, schema_only=schema_only)
+        field_defs[field.name] = _build_single_field(
+            field,
+            model_name,
+            schema_only=schema_only,
+            forbid_extra=forbid_extra,
+        )
     return field_defs
 
 
@@ -110,8 +117,14 @@ def _build_single_field(
     model_name: str,
     *,
     schema_only: bool = False,
+    forbid_extra: bool = True,
 ) -> Any:
-    python_type = _logical_type_to_python(field, model_name, schema_only=schema_only)
+    python_type = _logical_type_to_python(
+        field,
+        model_name,
+        schema_only=schema_only,
+        forbid_extra=forbid_extra,
+    )
     field_kwargs = {} if schema_only else _constraints_to_field_kwargs(field.constraints)
 
     annotation, default = _apply_required_nullable(field, python_type)
@@ -141,11 +154,22 @@ def _apply_required_nullable(
     return python_type | None, None if field.default is None else field.default
 
 
+def _nested_model_base(model_name: str, *, forbid_extra: bool) -> type[BaseModel]:
+    if forbid_extra:
+        return ContractModel
+    return type(
+        f"{model_name}PermissiveBase",
+        (ContractModel,),
+        {"model_config": ConfigDict(extra="ignore")},
+    )
+
+
 def _logical_type_to_python(
     field: ContractField,
     model_name: str,
     *,
     schema_only: bool = False,
+    forbid_extra: bool = True,
 ) -> Any:
     logical_type = field.logical_type
 
@@ -158,10 +182,15 @@ def _logical_type_to_python(
             field.children,
             nested_name,
             schema_only=schema_only,
+            forbid_extra=forbid_extra,
         )
         return cast(
             type[BaseModel],
-            create_model(nested_name, __base__=ContractModel, **nested_fields),
+            create_model(
+                nested_name,
+                __base__=_nested_model_base(nested_name, forbid_extra=forbid_extra),
+                **nested_fields,
+            ),
         )
 
     if logical_type == LogicalType.ARRAY:
@@ -171,6 +200,7 @@ def _logical_type_to_python(
                 field.children[0],
                 child_name,
                 schema_only=schema_only,
+                forbid_extra=forbid_extra,
             )
         else:
             item_type = Any
@@ -183,6 +213,7 @@ def _logical_type_to_python(
                 field.children[0],
                 child_name,
                 schema_only=schema_only,
+                forbid_extra=forbid_extra,
             )
         else:
             value_type = Any
@@ -252,17 +283,7 @@ def _field_from_pydantic_field(field_name: str, field_info: Any) -> ContractFiel
     constraints = _constraints_from_field_info(field_info)
 
     logical_type, children, inferred = _python_type_to_logical(annotation, field_name)
-    if not constraints.min_value and inferred.min_value is None:
-        constraints = inferred
-    elif inferred.enum_values:
-        constraints = FieldConstraints(
-            min_value=constraints.min_value or inferred.min_value,
-            max_value=constraints.max_value or inferred.max_value,
-            min_length=constraints.min_length or inferred.min_length,
-            max_length=constraints.max_length or inferred.max_length,
-            pattern=constraints.pattern or inferred.pattern,
-            enum_values=inferred.enum_values,
-        )
+    constraints = _merge_field_constraints(constraints, inferred)
 
     return ContractField(
         name=field_name,
@@ -272,6 +293,44 @@ def _field_from_pydantic_field(field_name: str, field_info: Any) -> ContractFiel
         default=default,
         constraints=constraints,
         children=children,
+    )
+
+
+def _merge_field_constraints(
+    constraints: FieldConstraints,
+    inferred: FieldConstraints,
+) -> FieldConstraints:
+    min_value = constraints.min_value if constraints.min_value is not None else inferred.min_value
+    max_value = constraints.max_value if constraints.max_value is not None else inferred.max_value
+    min_length = (
+        constraints.min_length if constraints.min_length is not None else inferred.min_length
+    )
+    max_length = (
+        constraints.max_length if constraints.max_length is not None else inferred.max_length
+    )
+    pattern = constraints.pattern if constraints.pattern is not None else inferred.pattern
+    if inferred.enum_values:
+        return FieldConstraints(
+            min_value=min_value,
+            max_value=max_value,
+            min_length=min_length,
+            max_length=max_length,
+            pattern=pattern,
+            enum_values=inferred.enum_values,
+        )
+    has_explicit = any(
+        getattr(constraints, key) is not None
+        for key in ("min_value", "max_value", "min_length", "max_length", "pattern")
+    )
+    if not has_explicit:
+        return inferred
+    return FieldConstraints(
+        min_value=min_value,
+        max_value=max_value,
+        min_length=min_length,
+        max_length=max_length,
+        pattern=pattern,
+        enum_values=constraints.enum_values,
     )
 
 

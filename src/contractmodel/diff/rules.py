@@ -138,8 +138,6 @@ def classify_field_change(
 
 def is_removed_field_breaking(field: ContractField, *, mode: CompatibilityMode) -> bool:
     """Return True when removing a field is a breaking change."""
-    if mode == CompatibilityMode.FORWARD:
-        return False
     if mode == CompatibilityMode.NONE:
         return True
     return field.required and not field.nullable
@@ -161,14 +159,15 @@ def is_added_field_breaking(field: ContractField, *, mode: CompatibilityMode) ->
 def detect_renames(
     removed: dict[str, ContractField],
     added: dict[str, ContractField],
-) -> tuple[set[str], set[str], list[str]]:
+) -> tuple[set[str], set[str], list[tuple[str, str, ContractField, ContractField]]]:
     """Pair removed/added fields by aliases.
 
-    Returns paired removed, paired added, and rename messages.
+    Returns paired removed names, paired added names, and rename tuples
+    ``(old_name, new_name, old_field, new_field)``.
     """
     paired_removed: set[str] = set()
     paired_added: set[str] = set()
-    rename_breaking: list[str] = []
+    rename_pairs: list[tuple[str, str, ContractField, ContractField]] = []
 
     for old_name, old_field in removed.items():
         for new_name, new_field in added.items():
@@ -179,9 +178,7 @@ def detect_renames(
             if new_name in old_aliases or old_name in new_aliases:
                 paired_removed.add(old_name)
                 paired_added.add(new_name)
-                rename_breaking.append(
-                    f"Field '{old_name}' renamed to '{new_name}' via alias"
-                )
+                rename_pairs.append((old_name, new_name, old_field, new_field))
                 break
 
-    return paired_removed, paired_added, rename_breaking
+    return paired_removed, paired_added, rename_pairs

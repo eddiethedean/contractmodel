@@ -10,9 +10,11 @@ These are intended to remain backward compatible within the 0.x line unless a se
 - `ValidationResult`, `ValidationErrorDetail`, `ValidationWarningDetail` field shapes (including `__bool__` and `raise_for_errors()`)
 - `ContractDiff`, `BreakingChange`, `NonBreakingChange`, `FieldChange`
 - Top-level package exports in `contractmodel.__all__`
-- `ValidationMode` and `CompatibilityMode` enum member names and values
+- `ValidationMode`, `CompatibilityMode`, `LogicalType`, and `ChangeType` enum member names and values
 
 Call `to_pydantic(mode=...)` once per contract and reuse the returned model class. The same cached model is used for validation at the matching `mode`.
+
+`validate_*` methods may merge results from experimental validator plugins when entry points are installed.
 
 ## Tier 2 — Stable with caveats
 
@@ -42,3 +44,5 @@ Not guaranteed stable. Signatures and behavior may change in patch releases.
 | Bug fix, docs, performance | PATCH (0.1.x) |
 | New optional API, new error codes | MINOR (0.2.0) |
 | Removed/changed Tier 1 API | MAJOR (1.0.0) |
+
+Pre-1.0 patch releases (including 0.1.2) may add documented helpers such as `load`, `save`, and validation limits without a minor bump.

@@ -10,8 +10,10 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
+from pydantic import ValidationError
+
 from contractmodel.core.ccm import CanonicalContract
-from contractmodel.errors import RegistryError
+from contractmodel.errors import OdcsImportError, RegistryError
 
 MAX_REGISTRY_RESPONSE_BYTES = 10 * 1024 * 1024
 
@@ -103,7 +105,10 @@ def fetch_contract(
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             raw = _read_bounded_response(response)
-            data: dict[str, Any] = json.loads(raw.decode())
+            try:
+                data: dict[str, Any] = json.loads(raw.decode())
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                raise RegistryError("Registry returned invalid JSON") from exc
     except RegistryError:
         raise
     except urllib.error.HTTPError as exc:
@@ -111,8 +116,11 @@ def fetch_contract(
     except urllib.error.URLError as exc:
         raise RegistryError(f"Failed to fetch contract: {exc}") from exc
 
-    if "schema" in data and isinstance(data["schema"], list):
-        from contractmodel.adapters.odcs import import_odcs
+    try:
+        if "schema" in data and isinstance(data["schema"], list):
+            from contractmodel.adapters.odcs import import_odcs
 
-        return import_odcs(data)
-    return CanonicalContract.model_validate(data)
+            return import_odcs(data)
+        return CanonicalContract.model_validate(data)
+    except (ValidationError, OdcsImportError) as exc:
+        raise RegistryError("Registry returned an invalid contract") from exc

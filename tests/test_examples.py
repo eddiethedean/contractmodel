@@ -86,3 +86,17 @@ def test_load_example_json_contract(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(examples_mod, "read_example_text", lambda _name: payload)
     contract = load_example("sample.ccm.json")
     assert contract.ccm.contract_id == "json-example"
+
+
+def test_examples_dirs_stay_in_sync() -> None:
+    repo_examples = Path(__file__).resolve().parents[1] / "examples"
+    bundled = Path(__file__).resolve().parents[1] / "src" / "contractmodel" / "examples_data"
+
+    def relative_files(root: Path) -> set[str]:
+        return {
+            str(path.relative_to(root))
+            for path in root.rglob("*")
+            if path.is_file() and path.name != "README.md"
+        }
+
+    assert relative_files(repo_examples) == relative_files(bundled)

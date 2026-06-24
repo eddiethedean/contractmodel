@@ -16,7 +16,7 @@ from contractmodel.core.result import (
     ValidationWarningDetail,
 )
 from contractmodel.core.types import ValidationMode
-from contractmodel.validation.limits import check_byte_limit, check_row_limit
+from contractmodel.validation.limits import check_byte_limit, check_row_limit, validate_limit_params
 from contractmodel.validation.quality import validate_quality_rules
 
 
@@ -106,6 +106,7 @@ def validate_records(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate multiple records against a contract."""
+    validate_limit_params(max_rows=max_rows)
     record_list = list(records)
     row_limit_result = check_row_limit(len(record_list), max_rows)
     if row_limit_result is not None:
@@ -141,8 +142,12 @@ def validate_records(
         uniqueness_errors = _check_uniqueness(record_list, unique_fields)
         all_errors.extend(uniqueness_errors)
 
-    if uniqueness_errors and invalid < total:
-        invalid = max(invalid, 1)
+    if uniqueness_errors:
+        duplicate_rows = {error.row for error in uniqueness_errors if error.row is not None}
+        if duplicate_rows:
+            invalid = max(invalid, len(duplicate_rows))
+        elif invalid < total:
+            invalid = max(invalid, 1)
 
     success = len(all_errors) == 0
     return ValidationResult(
@@ -169,6 +174,7 @@ def validate_json(
     max_rows: int | None = None,
 ) -> ValidationResult:
     """Validate JSON data against a contract."""
+    validate_limit_params(max_bytes=max_bytes, max_rows=max_rows)
     if isinstance(data, (str, bytes)):
         byte_limit_result = check_byte_limit(data, max_bytes)
         if byte_limit_result is not None:
@@ -186,16 +192,32 @@ def validate_json(
                     message=f"Invalid JSON: {exc.msg}",
                 )
             ],
+            metrics={
+                "records_total": 0,
+                "records_valid": 0,
+                "records_invalid": 0,
+            },
         )
 
     if isinstance(parsed, list):
-        errors: list[ValidationErrorDetail] = []
-        records: list[Mapping[str, Any]] = []
+        row_limit_result = check_row_limit(len(parsed), max_rows)
+        if row_limit_result is not None:
+            return row_limit_result
+
+        all_errors: list[ValidationErrorDetail] = []
+        all_warnings: list[ValidationWarningDetail] = []
+        total = len(parsed)
+        invalid = 0
+        dict_records: list[Mapping[str, Any]] = []
+        dict_row_indices: list[int] = []
+
+        validation_model: type[BaseModel] | None = None
+        if mode != ValidationMode.QUALITY_ONLY:
+            validation_model = _validation_model(contract, mode=mode)
+
         for index, item in enumerate(parsed):
-            if isinstance(item, dict):
-                records.append(item)
-            else:
-                errors.append(
+            if not isinstance(item, dict):
+                all_errors.append(
                     ValidationErrorDetail(
                         code="CM_RUNTIME_ERROR",
                         message="JSON array items must be objects",
@@ -203,18 +225,49 @@ def validate_json(
                         value=item,
                     )
                 )
-        result = validate_records(contract, records, mode=mode, max_rows=max_rows)
-        merged_errors = errors + result.errors
-        merged_success = len(merged_errors) == 0
-        metrics = dict(result.metrics)
-        metrics["records_total"] = len(parsed)
+                invalid += 1
+                continue
+            dict_records.append(item)
+            dict_row_indices.append(index)
+            result = validate_record(
+                contract,
+                item,
+                mode=mode,
+                model=validation_model,
+            )
+            for error in result.errors:
+                all_errors.append(error.model_copy(update={"row": index}))
+            for warning in result.warnings:
+                all_warnings.append(warning.model_copy(update={"row": index}))
+            if not result.success:
+                invalid += 1
+
+        unique_fields = {f.name for f in contract.contract_schema.fields if f.constraints.unique}
+        if unique_fields and dict_records:
+            uniqueness_errors = _check_uniqueness(
+                dict_records,
+                unique_fields,
+                row_indices=dict_row_indices,
+            )
+            all_errors.extend(uniqueness_errors)
+            if uniqueness_errors:
+                duplicate_rows = {error.row for error in uniqueness_errors if error.row is not None}
+                if duplicate_rows:
+                    invalid = max(invalid, len(duplicate_rows))
+
+        success = len(all_errors) == 0
         return ValidationResult(
-            success=merged_success,
-            error_count=len(merged_errors),
-            warning_count=result.warning_count,
-            errors=merged_errors,
-            warnings=result.warnings,
-            metrics=metrics,
+            success=success,
+            error_count=len(all_errors),
+            warning_count=len(all_warnings),
+            errors=all_errors,
+            warnings=all_warnings,
+            metrics={
+                "records_total": total,
+                "records_valid": total - invalid,
+                "records_invalid": invalid,
+                "error_count": len(all_errors),
+            },
         )
 
     if isinstance(parsed, dict):
@@ -229,6 +282,11 @@ def validate_json(
                 message="JSON data must be an object or array of objects",
             )
         ],
+        metrics={
+            "records_total": 0,
+            "records_valid": 0,
+            "records_invalid": 0,
+        },
     )
 
 
@@ -280,11 +338,15 @@ def _uniqueness_key(value: Any) -> str:
 def _check_uniqueness(
     records: list[Mapping[str, Any]],
     unique_fields: set[str],
+    *,
+    row_indices: list[int] | None = None,
 ) -> list[ValidationErrorDetail]:
     errors: list[ValidationErrorDetail] = []
     seen: dict[str, set[str]] = {field: set() for field in unique_fields}
+    indices = row_indices if row_indices is not None else list(range(len(records)))
 
-    for index, record in enumerate(records):
+    for record_index, record in enumerate(records):
+        row = indices[record_index]
         for field in unique_fields:
             value = record.get(field)
             if value is None:
@@ -296,7 +358,7 @@ def _check_uniqueness(
                         code="CM_DATASET_UNIQUE",
                         message=f"Duplicate value for unique field '{field}'",
                         field=field,
-                        row=index,
+                        row=row,
                         value=value,
                     )
                 )

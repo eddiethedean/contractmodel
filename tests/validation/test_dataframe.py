@@ -77,7 +77,7 @@ def test_validate_parquet(tmp_path: Path) -> None:
     assert result.success is True
 
 
-def test_optional_dependency_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_optional_dependency_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     contract = CanonicalContract.model_validate(
         {
             "contract_id": "x",
@@ -95,5 +95,7 @@ def test_optional_dependency_error(monkeypatch: pytest.MonkeyPatch) -> None:
         "contractmodel.validation.dataframe._import_pandas",
         _raise_optional,
     )
+    data_path = tmp_path / "dummy.csv"
+    data_path.write_text("id\na\n", encoding="utf-8")
     with pytest.raises(OptionalDependencyError):
-        wrapper.validate_csv("dummy.csv")
+        wrapper.validate_csv(data_path)

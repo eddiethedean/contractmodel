@@ -10,6 +10,7 @@ from contractmodel.errors import ContractPluginError
 from contractmodel.plugins.runtime import (
     list_plugins,
     run_exporter_plugin,
+    run_registry_publish,
     run_validator_plugins,
 )
 
@@ -93,3 +94,65 @@ def test_run_validator_plugins_raises_contract_plugin_error() -> None:
         pytest.raises(ContractPluginError, match="Validator plugin 'bad' failed"),
     ):
         run_validator_plugins(contract, {}, ValidationResult(success=True))
+
+
+def test_run_registry_publish_forwards_url() -> None:
+    contract = CanonicalContract.model_validate(
+        {
+            "contract_id": "x",
+            "name": "X",
+            "version": "1.0.0",
+            "schema": {"fields": []},
+        }
+    )
+    plugin = MagicMock()
+    plugin.publish.return_value = {"ok": True}
+    with patch(
+        "contractmodel.plugins.runtime.discover_entry_points",
+        return_value={"hub": plugin},
+    ):
+        run_registry_publish(contract, "http://registry.test")
+    plugin.publish.assert_called_once_with(contract, "http://registry.test")
+
+
+def test_run_registry_publish_raises_contract_plugin_error() -> None:
+    contract = CanonicalContract.model_validate(
+        {
+            "contract_id": "x",
+            "name": "X",
+            "version": "1.0.0",
+            "schema": {"fields": []},
+        }
+    )
+    plugin = MagicMock()
+    plugin.publish.side_effect = RuntimeError("boom")
+    with (
+        patch(
+            "contractmodel.plugins.runtime.discover_entry_points",
+            return_value={"hub": plugin},
+        ),
+        pytest.raises(ContractPluginError, match="Registry plugin 'hub' failed"),
+    ):
+        run_registry_publish(contract, "http://registry.test")
+
+
+def test_run_exporter_plugin_none_raises() -> None:
+    contract = CanonicalContract.model_validate(
+        {
+            "contract_id": "x",
+            "name": "X",
+            "version": "1.0.0",
+            "schema": {"fields": []},
+        }
+    )
+    plugin = MagicMock()
+    plugin.target = "custom"
+    plugin.export.return_value = None
+    with (
+        patch(
+            "contractmodel.plugins.runtime.discover_entry_points",
+            return_value={"custom": plugin},
+        ),
+        pytest.raises(ContractPluginError, match="returned no content"),
+    ):
+        run_exporter_plugin(contract, "custom")

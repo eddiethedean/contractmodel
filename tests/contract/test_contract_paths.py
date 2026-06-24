@@ -125,9 +125,75 @@ def test_validate_file_dispatch(tmp_path: Path) -> None:
     assert bool(result) is True
 
 
+def test_validate_unsupported_format_raises(tmp_path: Path) -> None:
+    contract = DataContract.from_ccm(
+        CanonicalContract.model_validate(
+            {
+                "contract_id": "x",
+                "name": "X",
+                "version": "1.0.0",
+                "schema": {"fields": [{"name": "id", "logical_type": "string"}]},
+            }
+        )
+    )
+    data_path = tmp_path / "data.xml"
+    data_path.write_text("<x/>", encoding="utf-8")
+    with pytest.raises(ValueError, match="Unsupported data format"):
+        contract.validate(data_path, format="xml")
+
+
 def test_validation_result_raise_for_errors() -> None:
     contract = DataContract.from_odcs(EXAMPLES / "customer_events.odcs.yaml")
     result = contract.validate_record({})
     assert not result
     with pytest.raises(ValueError, match="CM_"):
         result.raise_for_errors()
+
+
+def test_from_pydantic_facade() -> None:
+    from pydantic import BaseModel
+
+    class Event(BaseModel):
+        id: str
+
+    contract = DataContract.from_pydantic(Event, name="Events")
+    assert contract.contract_id == "events"
+    assert contract.fields[0].name == "id"
+
+
+def test_save_auto_ccm_json(tmp_path: Path) -> None:
+    contract = DataContract.load(EXAMPLES / "customer_events.ccm.yaml")
+    out = tmp_path / "saved.json"
+    contract.save(out, format="auto")
+    reloaded = DataContract.load(out)
+    assert reloaded.contract_id == contract.contract_id
+
+
+def test_validate_missing_json_file_returns_result(tmp_path: Path) -> None:
+    contract = DataContract.load(EXAMPLES / "customer_events.odcs.yaml")
+    result = contract.validate(tmp_path / "missing.json")
+    assert result.success is False
+
+
+def test_plugin_integration_on_validate_record() -> None:
+    from unittest.mock import MagicMock, patch
+
+    from contractmodel.core.result import ValidationResult
+
+    contract = DataContract.load(EXAMPLES / "customer_events.odcs.yaml")
+    plugin = MagicMock()
+    plugin.validate.return_value = ValidationResult(success=True, warnings=[])
+    with patch(
+        "contractmodel.plugins.runtime.discover_entry_points",
+        return_value={"extra": plugin},
+    ):
+        contract.validate_record(
+            {
+                "event_id": "550e8400-e29b-41d4-a716-446655440000",
+                "customer_id": "C1",
+                "event_timestamp": "2026-06-23T12:00:00",
+                "event_type": "created",
+            }
+        )
+    plugin.validate.assert_called_once()
+

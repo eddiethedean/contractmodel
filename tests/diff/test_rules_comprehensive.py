@@ -129,7 +129,7 @@ def test_classify_non_breaking_updates() -> None:
 def test_removed_field_modes() -> None:
     field = _field(name="id", required=True, nullable=False)
     assert is_removed_field_breaking(field, mode=CompatibilityMode.BACKWARD) is True
-    assert is_removed_field_breaking(field, mode=CompatibilityMode.FORWARD) is False
+    assert is_removed_field_breaking(field, mode=CompatibilityMode.FORWARD) is True
     assert is_removed_field_breaking(field, mode=CompatibilityMode.NONE) is True
 
 
@@ -147,7 +147,9 @@ def test_detect_renames() -> None:
     added = {
         "new_name": _field(name="new_name", aliases=["old_name"]),
     }
-    paired_removed, paired_added, messages = detect_renames(removed, added)
+    paired_removed, paired_added, rename_pairs = detect_renames(removed, added)
     assert "old_name" in paired_removed
     assert "new_name" in paired_added
-    assert messages
+    assert rename_pairs
+    assert rename_pairs[0][0] == "old_name"
+    assert rename_pairs[0][1] == "new_name"
