@@ -1,32 +1,46 @@
-apiVersion: v3.0.0
-kind: DataContract
-id: customer-events
-name: Customer Events
-version: 1.0.0
-description: Contract for customer event records.
+# version: contract revision; apiVersion: ODCS specification release
+version: "1.0.0"
+apiVersion: "v3.1.0"
+kind: "DataContract"
+id: "customer-events"
+name: "Customer Events"
+status: "draft"
+description:
+  purpose: Contract for customer event records.
 
-owner:
-  team: customer-platform
-  contact: data-team@example.com
+team:
+  name: "customer-platform"
+
+support:
+  - channel: "email"
+    url: "mailto:data-team@example.com"
 
 schema:
-  - name: event_id
-    logicalType: uuid
-    required: true
-    description: Unique event identifier.
-  - name: customer_id
-    logicalType: string
-    required: true
-    description: Customer identifier.
-  - name: event_timestamp
-    logicalType: datetime
-    required: true
-    description: Event timestamp.
-  - name: event_type
-    logicalType: string
-    required: true
-    description: Event type.
-    enum:
-      - created
-      - updated
-      - deleted
+  - name: "customer_events"
+    logicalType: "object"
+    physicalName: "customer_events"
+    properties:
+      - name: "event_id"
+        logicalType: "string"
+        required: true
+        description: Unique event identifier.
+        logicalTypeOptions:
+          format: "uuid"
+      - name: "customer_id"
+        logicalType: "string"
+        required: true
+        description: Customer identifier.
+      - name: "event_timestamp"
+        logicalType: "timestamp"
+        required: true
+        description: Event timestamp.
+      - name: "event_type"
+        logicalType: "string"
+        required: true
+        description: Event type.
+        customProperties:
+          - property: "enum"
+            value:
+              - created
+              - updated
+              - deleted

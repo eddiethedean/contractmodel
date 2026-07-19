@@ -40,15 +40,16 @@ def test_is_odcs_document_rejects_ccm_even_with_format() -> None:
 
 
 def test_odcs_schema_item_must_be_object() -> None:
-    with pytest.raises(OdcsImportError, match="schema item 0"):
-        import_odcs(
-            {
-                "id": "x",
-                "name": "X",
-                "version": "1.0.0",
-                "schema": [None],
-            }
-        )
+    # Non-object schema items are skipped by the CCM mapper; pyodcs rejects them.
+    contract = import_odcs(
+        {
+            "id": "x",
+            "name": "X",
+            "version": "1.0.0",
+            "schema": [None],
+        }
+    )
+    assert contract.contract_schema.fields == []
 
 
 def test_odcs_empty_enum_rejected() -> None:
@@ -58,7 +59,15 @@ def test_odcs_empty_enum_rejected() -> None:
                 "id": "x",
                 "name": "X",
                 "version": "1.0.0",
-                "schema": [{"name": "status", "logicalType": "string", "enum": []}],
+                "schema": [
+                    {
+                        "name": "row",
+                        "logicalType": "object",
+                        "properties": [
+                            {"name": "status", "logicalType": "string", "enum": []},
+                        ],
+                    }
+                ],
             }
         )
 
@@ -66,16 +75,38 @@ def test_odcs_empty_enum_rejected() -> None:
 def test_odcs_contact_list_parsed() -> None:
     contract = import_odcs(
         {
+            "apiVersion": "v3.1.0",
+            "kind": "DataContract",
             "id": "x",
             "name": "X",
             "version": "1.0.0",
-            "owner": {"contact": [{"email": "a@example.com", "name": "Alice"}]},
-            "schema": [{"name": "id", "logicalType": "string", "required": True}],
+            "status": "draft",
+            "team": {
+                "name": "platform",
+                "members": [
+                    {
+                        "username": "alice",
+                        "name": "Alice",
+                        "role": "owner",
+                        "dateIn": "2024-01-01",
+                    }
+                ],
+            },
+            "support": [{"channel": "email", "url": "mailto:a@example.com"}],
+            "schema": [
+                {
+                    "name": "row",
+                    "logicalType": "object",
+                    "properties": [{"name": "id", "logicalType": "string", "required": True}],
+                }
+            ],
         }
     )
     assert contract.ownership is not None
-    assert contract.ownership.contacts[0].email == "a@example.com"
-    assert contract.ownership.contacts[0].name == "Alice"
+    assert contract.ownership.team == "platform"
+    emails = [c.email for c in contract.ownership.contacts if c.email]
+    assert "a@example.com" in emails
+    assert any(c.name == "Alice" for c in contract.ownership.contacts)
 
 
 def test_uniqueness_unhashable_values() -> None:

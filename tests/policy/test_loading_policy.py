@@ -43,7 +43,14 @@ def test_unsupported_odcs_version_fails_before_generation() -> None:
         "id": "x",
         "name": "X",
         "version": "1.0.0",
-        "schema": [{"name": "id", "logicalType": "string"}],
+        "status": "draft",
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string"}],
+            }
+        ],
     }
     with pytest.raises((OdcsImportError, LoadingPolicyError), match="apiVersion"):
         DataContract.from_odcs_dict(data)
@@ -56,8 +63,15 @@ def test_extension_budget_rejects_oversized_payload() -> None:
         "id": "x",
         "name": "X",
         "version": "1.0.0",
-        "schema": [{"name": "id", "logicalType": "string"}],
-        "x-huge": "y" * 70_000,
+        "status": "draft",
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string"}],
+            }
+        ],
+        "customProperties": [{"property": "x-huge", "value": "y" * 70_000}],
     }
     policy = LoadingPolicy(max_bytes=None, max_collection_size=None)
     with pytest.raises(ExtensionBudgetError, match="max_bytes"):

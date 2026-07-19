@@ -79,9 +79,16 @@ def init(
             "id": "my-contract",
             "name": "My Contract",
             "version": "1.0.0",
-            "description": "A new data contract.",
+            "status": "draft",
+            "description": {"purpose": "A new data contract."},
             "schema": [
-                {"name": "id", "logicalType": "string", "required": True},
+                {
+                    "name": "my_contract",
+                    "logicalType": "object",
+                    "properties": [
+                        {"name": "id", "logicalType": "string", "required": True},
+                    ],
+                }
             ],
         }
     else:

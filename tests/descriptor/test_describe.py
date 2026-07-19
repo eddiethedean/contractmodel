@@ -42,8 +42,16 @@ def test_data_contract_describe_maps_lossy_import() -> None:
         "id": "events",
         "name": "Events",
         "version": "1.0.0",
-        "owner": {"contact": "a@example.com"},
-        "schema": [{"name": "id", "logicalType": "string", "required": True}],
+        "status": "draft",
+        "team": {"name": "platform"},
+        "support": [{"channel": "email", "url": "mailto:a@example.com"}],
+        "schema": [
+            {
+                "name": "events",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string", "required": True}],
+            }
+        ],
     }
     contract = DataContract.from_odcs_dict(data)
     descriptor = contract.describe()

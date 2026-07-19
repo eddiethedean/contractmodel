@@ -19,11 +19,11 @@ def test_odcs_pydantic_roundtrip_preserves_identity_and_nested() -> None:
         "id": "nested-contract",
         "name": "Nested Contract",
         "version": "3.2.1",
+        "status": "draft",
         "schema": [
             {
                 "name": "customer",
                 "logicalType": "object",
-                "required": True,
                 "properties": [
                     {"name": "id", "logicalType": "string", "required": True},
                     {
@@ -36,8 +36,10 @@ def test_odcs_pydantic_roundtrip_preserves_identity_and_nested() -> None:
         ],
     }
     original = DataContract.from_odcs_dict(data)
-    assert original.fields[0].children[0].name == "id"
-    assert original.fields[0].children[1].logical_type.value == "array"
+    # Single object schema is flattened to row fields for CCM validation.
+    assert [field.name for field in original.fields] == ["id", "tags"]
+    assert original.fields[1].logical_type.value == "array"
+    assert original.fields[1].children[0].name == "item"
 
     model = original.to_pydantic()
     assert is_contract_model(model)
@@ -48,7 +50,7 @@ def test_odcs_pydantic_roundtrip_preserves_identity_and_nested() -> None:
     restored = DataContract.from_pydantic(model)
     assert restored.contract_id == "nested-contract"
     assert restored.version == "3.2.1"
-    assert restored.fields[0].children[0].name == "id"
+    assert restored.fields[0].name == "id"
     assert fingerprint_contract(restored.ccm) == fingerprint_contract(original.ccm)
 
     exported = restored.to_odcs()
@@ -65,12 +67,19 @@ def test_integrator_surface_uses_only_top_level_apis() -> None:
             "id": "integrator",
             "name": "Integrator",
             "version": "1.0.0",
+            "status": "draft",
             "schema": [
                 {
-                    "name": "email",
-                    "logicalType": "email",
-                    "required": True,
-                    "nullable": False,
+                    "name": "row",
+                    "logicalType": "object",
+                    "properties": [
+                        {
+                            "name": "email",
+                            "logicalType": "string",
+                            "required": True,
+                            "logicalTypeOptions": {"format": "email"},
+                        }
+                    ],
                 }
             ],
         }

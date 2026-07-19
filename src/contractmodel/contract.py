@@ -11,6 +11,11 @@ import yaml
 from pydantic import BaseModel
 
 from contractmodel.adapters.odcs import export_odcs, import_odcs, is_odcs_document
+from contractmodel.adapters.odcs_conformance import (
+    diff_odcs_documents,
+    parse_and_validate_odcs_file,
+    validate_odcs_document,
+)
 from contractmodel.adapters.pydantic import (
     contract_from_pydantic,
     get_pydantic_model,
@@ -149,12 +154,8 @@ class DataContract:
     ) -> DataContract:
         """Load an ODCS document from a YAML or JSON file path."""
         path = resolve_contract_path(path, policy)
-        with path.open(encoding="utf-8") as f:
-            data = json.load(f) if path.suffix.lower() == ".json" else yaml.safe_load(f)
-        if not isinstance(data, dict):
-            msg = "ODCS document must be a mapping"
-            raise ValueError(msg)
-        return cls.from_odcs_dict(data, policy=policy)
+        data = parse_and_validate_odcs_file(path)
+        return cls.from_odcs_dict(data, policy=policy, _already_validated=True)
 
     @classmethod
     def from_odcs_dict(
@@ -162,10 +163,12 @@ class DataContract:
         data: dict[str, Any],
         *,
         policy: LoadingPolicy | None = None,
+        _already_validated: bool = False,
     ) -> DataContract:
         """Load an ODCS document from a dict.
 
         Populates ``import_warnings`` when lossy fields are detected during import.
+        Conformance is enforced by pyodcs unless ``_already_validated`` is set.
         """
         api_version = normalize_odcs_api_version(
             data.get("apiVersion") if isinstance(data.get("apiVersion"), str) else None
@@ -176,15 +179,18 @@ class DataContract:
             format_name="odcs",
             odcs_api_version=api_version,
         )
+        if not _already_validated:
+            validate_odcs_document(data)
         warnings: list[ValidationWarningDetail] = []
-        owner = data.get("owner")
-        if isinstance(owner, dict) and owner.get("contact"):
+        support = data.get("support")
+        team = data.get("team")
+        if isinstance(support, list) or isinstance(team, dict):
             warnings.append(
                 ValidationWarningDetail(
                     code="ODCS_LOSSY_IMPORT",
                     message=(
-                        "ODCS contact imported as ownership contact list; "
-                        "export uses first contact only"
+                        "ODCS team/support mapped to ownership; "
+                        "export uses team name and mailto support channels"
                     ),
                 )
             )
@@ -485,6 +491,13 @@ class DataContract:
         ``source_version`` from ``self`` and ``target_version`` from ``other``.
         """
         return diff_contracts(self._ccm, other._ccm, mode=mode)
+
+    def diff_odcs(self, other: DataContract) -> dict[str, Any]:
+        """Compare ODCS exports with pyodcs compatibility analysis.
+
+        Separate from :meth:`diff`, which operates on the Canonical Contract Model.
+        """
+        return diff_odcs_documents(self.to_odcs(), other.to_odcs())
 
     def has_breaking_changes(
         self,

@@ -59,4 +59,5 @@ def test_export_odcs_wrapper() -> None:
     )
     odcs = export_odcs(contract)
     assert odcs["id"] == "wrap"
-    assert odcs["schema"][0]["name"] == "id"
+    assert odcs["schema"][0]["name"] == "wrap"
+    assert odcs["schema"][0]["properties"][0]["name"] == "id"

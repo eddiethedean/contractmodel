@@ -16,6 +16,8 @@ from contractmodel import (
     LoadingPolicy,
     LoadingPolicyError,
     LogicalType,
+    OdcsImportError,
+    OdcsValidationError,
     describe_contract,
     fingerprint_contract,
 )
@@ -119,11 +121,17 @@ def test_odcs_provenance_without_api_version() -> None:
         "id": "legacy",
         "name": "Legacy",
         "version": "1.0.0",
-        "schema": [{"name": "id", "logicalType": "string"}],
+        "status": "draft",
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string"}],
+            }
+        ],
     }
-    contract = DataContract.from_odcs_dict(data)
-    assert contract.source_format == "odcs"
-    assert describe_contract(contract).provenance.source_format == "odcs"
+    with pytest.raises((OdcsImportError, LoadingPolicyError, OdcsValidationError)):
+        DataContract.from_odcs_dict(data)
 
 
 def test_ccm_with_apiVersion_extension_stays_ccm() -> None:

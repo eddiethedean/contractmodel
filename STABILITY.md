@@ -11,7 +11,7 @@ semantic kernel and public integration API. New interchange formats follow the
 These are intended to remain backward compatible within the 0.x line unless a
 serious bug fix requires otherwise. Breaking changes require migration notes.
 
-- `DataContract` loader and validation methods (`load`, `from_yaml`, `from_json`, `from_dict`, `from_odcs`, `validate_*`, `diff`, `to_*` exporters, `save`, `describe`)
+- `DataContract` loader and validation methods (`load`, `from_yaml`, `from_json`, `from_dict`, `from_odcs`, `validate_*`, `diff`, `diff_odcs`, `to_*` exporters, `save`, `describe`)
 - `describe_contract`, `fingerprint_contract`, `canonical_bytes`, `canonical_ccm_dict`
 - `ContractDescriptor` and related frozen descriptor types (`ContractIdentity`, `SchemaDescriptor`, `FieldDescriptor`, …)
 - `is_contract_model`, `resolve_contract_model`
@@ -20,12 +20,15 @@ serious bug fix requires otherwise. Breaking changes require migration notes.
 - `export_stability` / `ExportStability` registry
 - `ValidationResult`, `ValidationErrorDetail`, `ValidationWarningDetail` field shapes (including `__bool__` and `raise_for_errors()`)
 - `ContractDiff`, `BreakingChange`, `NonBreakingChange`, `FieldChange`
+- `OdcsValidationError` (pyodcs conformance failures)
 - Top-level package exports in `contractmodel.__all__`
 - `ValidationMode`, `CompatibilityMode`, `LogicalType`, and `ChangeType` enum member names and values
 
 Call `to_pydantic(mode=...)` once per contract and reuse the returned model class. The same cached model is used for validation at the matching `mode`. Generated models preserve `__contract_id__`, `__contract_version__`, and `__contract_fingerprint__` ClassVars.
 
 `validate_*` methods may merge results from experimental validator plugins when entry points are installed.
+
+ODCS document conformance is delegated to **pyodcs** (Open Data Contract Standard reference implementation). ContractModel maps conformant ODCS dicts into the Canonical Contract Model. Use `diff` for CCM compatibility and `diff_odcs` for ODCS-native revision analysis.
 
 ### Fingerprint participation
 
@@ -78,4 +81,4 @@ Plugin and registry trust remain experimental until **0.6**. See [ROADMAP.md](RO
 | New optional API, new error codes | MINOR |
 | Removed/changed Tier 1 API | MAJOR (1.0.0) |
 
-Supported ranges: ODCS `v3.0.0`–`v3.1.0`; Pydantic `>=2.7,<3`.
+Supported ranges: ODCS `v3.1.0` (via pyodcs); Pydantic `>=2.7,<3`.

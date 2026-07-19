@@ -40,9 +40,9 @@ semantic kernel and public integration API:
 - `DataContract` facade over a Canonical Contract Model (CCM)
 - Wire schema `contractmodel.ccm/1`, immutable descriptors, and stable fingerprints
 - Recognition helpers and public `LoadingPolicy`
-- ODCS and Pydantic round trips with identity preservation
+- ODCS and Pydantic round trips with identity preservation (ODCS conformance via **pyodcs**)
 - Structured record, JSON, CSV, Parquet, Pandas, and Polars validation
-- Compatibility modes and structured contract diffs
+- Compatibility modes and structured contract diffs (CCM `diff` and ODCS-native `diff_odcs`)
 - JSON Schema, OpenAPI, Markdown, RDF, SHACL, and OWL exports
 - CLI, examples, SARIF, error codes, and API stability tiers
 

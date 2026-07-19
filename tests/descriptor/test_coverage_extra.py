@@ -147,7 +147,8 @@ def test_policy_symlink_and_version_gates(tmp_path: Path) -> None:
 def test_versions_and_export_registry() -> None:
     assert normalize_odcs_api_version("  v3.1.0 ") == "v3.1.0"
     assert normalize_odcs_api_version("") is None
-    assert is_supported_odcs_version(None)
+    assert is_supported_odcs_version(None) is False
+    assert is_supported_odcs_version("v3.1.0")
     assert not is_supported_odcs_version("v0.0.1")
     assert "odcs" in known_export_targets()
     assert export_stability("unknown-format").value == "private"
@@ -173,12 +174,15 @@ def test_wire_helpers_and_nonfinite_rejection() -> None:
 
 
 def test_odcs_nested_items_list_and_children_key() -> None:
+    from contractmodel.adapters.odcs import import_odcs
+
     data = {
-        "apiVersion": "v3.0.0",
+        "apiVersion": "v3.1.0",
         "kind": "DataContract",
         "id": "n",
         "name": "N",
         "version": "1.0.0",
+        "status": "draft",
         "schema": [
             {
                 "name": "payload",
@@ -194,11 +198,10 @@ def test_odcs_nested_items_list_and_children_key() -> None:
             },
         ],
     }
-    contract = DataContract.from_odcs_dict(data)
-    assert contract.fields[0].children[0].name == "ok"
-    assert contract.fields[1].children[0].name == "item"
-    exported = contract.to_odcs()
-    assert exported["schema"][0]["properties"][0]["name"] == "ok"
+    # Mapping-only path: pyodcs rejects non-standard children/items shapes.
+    contract = import_odcs(data)
+    assert contract.contract_schema.fields[0].children[0].name == "ok"
+    assert contract.contract_schema.fields[1].children[0].name == "item"
 
 
 def test_fingerprint_rejects_nonfinite_and_bad_types() -> None:
@@ -261,8 +264,10 @@ def test_recognition_annotated_contract_model() -> None:
 
 
 def test_odcs_invalid_status_and_type() -> None:
+    from contractmodel.adapters.odcs import import_odcs
+
     with pytest.raises(OdcsImportError, match="status"):
-        DataContract.from_odcs_dict(
+        import_odcs(
             {
                 "apiVersion": "v3.1.0",
                 "kind": "DataContract",
@@ -270,18 +275,31 @@ def test_odcs_invalid_status_and_type() -> None:
                 "name": "X",
                 "version": "1.0.0",
                 "status": "nope",
-                "schema": [{"name": "id", "logicalType": "string"}],
+                "schema": [
+                    {
+                        "name": "row",
+                        "logicalType": "object",
+                        "properties": [{"name": "id", "logicalType": "string"}],
+                    }
+                ],
             }
         )
     with pytest.raises(OdcsImportError, match="logical type"):
-        DataContract.from_odcs_dict(
+        import_odcs(
             {
                 "apiVersion": "v3.1.0",
                 "kind": "DataContract",
                 "id": "x",
                 "name": "X",
                 "version": "1.0.0",
-                "schema": [{"name": "id", "logicalType": "not-a-type"}],
+                "status": "draft",
+                "schema": [
+                    {
+                        "name": "row",
+                        "logicalType": "object",
+                        "properties": [{"name": "id", "logicalType": "not-a-type"}],
+                    }
+                ],
             }
         )
 

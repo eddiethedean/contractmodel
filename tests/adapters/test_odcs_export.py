@@ -20,9 +20,14 @@ def test_export_customer_events_odcs() -> None:
     assert exported["id"] == "customer-events"
     assert exported["name"] == "Customer Events"
     assert exported["version"] == "1.0.0"
-    assert exported["owner"]["team"] == "customer-platform"
-    assert len(exported["schema"]) == 4
+    assert exported["team"]["name"] == "customer-platform"
+    assert len(exported["schema"]) == 1
+    props = exported["schema"][0]["properties"]
+    assert len(props) == 4
 
-    event_type = next(item for item in exported["schema"] if item["name"] == "event_type")
+    event_type = next(item for item in props if item["name"] == "event_type")
     assert event_type["logicalType"] == "string"
-    assert event_type["enum"] == ["created", "updated", "deleted"]
+    enum_prop = next(
+        item for item in event_type["customProperties"] if item["property"] == "enum"
+    )
+    assert enum_prop["value"] == ["created", "updated", "deleted"]

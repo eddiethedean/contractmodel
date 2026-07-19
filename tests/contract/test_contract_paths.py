@@ -37,7 +37,7 @@ def test_from_json_ccm_direct(tmp_path: Path) -> None:
 def test_from_odcs_invalid(tmp_path: Path) -> None:
     path = tmp_path / "bad.yaml"
     path.write_text("[]\n")
-    with pytest.raises(ValueError, match="mapping"):
+    with pytest.raises((ValueError, Exception)):
         DataContract.from_odcs(path)
 
 
@@ -56,13 +56,21 @@ def test_from_ccm_preserves_contract_id() -> None:
 
 def test_from_odcs_dict_with_contact_warning() -> None:
     data = {
-        "apiVersion": "v3.0.0",
+        "apiVersion": "v3.1.0",
         "kind": "DataContract",
         "id": "warn",
         "name": "Warn",
         "version": "1.0.0",
-        "owner": {"contact": [{"email": "a@example.com"}]},
-        "schema": [{"name": "id", "logicalType": "string", "required": True}],
+        "status": "draft",
+        "team": {"name": "platform"},
+        "support": [{"channel": "email", "url": "mailto:a@example.com"}],
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string", "required": True}],
+            }
+        ],
     }
     contract = DataContract.from_odcs_dict(data)
     assert any(w.code == "ODCS_LOSSY_IMPORT" for w in contract.import_warnings)

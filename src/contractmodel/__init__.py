@@ -34,6 +34,7 @@ from contractmodel.errors import (
     ContractModelError,
     ContractPluginError,
     OdcsImportError,
+    OdcsValidationError,
     OptionalDependencyError,
     RegistryError,
 )
@@ -90,6 +91,7 @@ __all__ = [
     "LogicalType",
     "NonBreakingChange",
     "OdcsImportError",
+    "OdcsValidationError",
     "OptionalDependencyError",
     "RegistryError",
     "SUPPORTED_ODCS_VERSIONS",

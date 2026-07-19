@@ -39,6 +39,7 @@ dependencies = [
   "email-validator>=2.0",
   "typer>=0.12",
   "rich>=13.0",
+  "pyodcs>=0.9.1,<2",
 ]
 
 [project.optional-dependencies]
@@ -86,7 +87,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 "src/contractmodel/cli/*.py" = ["B008"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -94,8 +95,13 @@ mypy_path = "src"
 packages = ["contractmodel"]
 
 [[tool.mypy.overrides]]
-module = ["yaml.*", "pandas.*", "polars.*", "pyarrow.*", "rdflib.*", "numpy.*"]
+module = ["yaml.*", "pandas.*", "polars.*", "pyarrow.*", "rdflib.*", "numpy.*", "pyodcs.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

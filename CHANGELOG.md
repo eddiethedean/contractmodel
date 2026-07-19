@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Breaking
+
+- ODCS import requires `apiVersion: v3.1.0` only (drop `v3.0.0` and missing-`apiVersion` legacy acceptance)
+- ODCS documents must conform to the [pyodcs](https://pypi.org/project/pyodcs/) reference validator before CCM mapping
+- ODCS export emits nested object schemas (`schema[].properties`), `description` objects, and `team`/`support` instead of legacy flat fields / `owner`
+
+### Added
+
+- Hard dependency on `pyodcs>=0.9.1,<2` for ODCS document conformance
+- `OdcsValidationError` with structured `diagnostics` from pyodcs
+- `DataContract.diff_odcs` for ODCS-native compatibility (separate from CCM `diff`)
+
 ### Known limitations
 
 Mapped to [ROADMAP.md](ROADMAP.md) releases:

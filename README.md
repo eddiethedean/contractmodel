@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/eddiethedean/contractmodel/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/contractmodel/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://eddiethedean.github.io/contractmodel/)
-[![Stability: 0.1.x](https://img.shields.io/badge/stability-0.1.x-orange.svg)](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md)
+[![Stability: 0.2.x](https://img.shields.io/badge/stability-0.2.x-orange.svg)](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md)
 
 **Python-native data contracts** — import [ODCS](https://github.com/bitol-io/open-data-contract-standard) (Open Data Contract Standard), validate with Pydantic, diff versions for breaking changes, and export to JSON Schema, OpenAPI, and more.
 
@@ -53,9 +53,9 @@ Works immediately after `pip install` — examples ship inside the package.
 | **Pydantic alone** | Fast record validation | No ODCS import, contract diffing, or governance format |
 | **Great Expectations / Soda** | Data quality suites | Not contract-first; weak ODCS/CCM round-trip |
 | **Raw ODCS tooling** | Standard YAML contracts | No unified validation, diff, and Pydantic generation |
-| **ContractModel** | CCM hub: ODCS ↔ Pydantic ↔ validation ↔ diff ↔ export | 0.1.x — see [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) for experimental areas |
+| **ContractModel** | CCM hub: ODCS ↔ Pydantic ↔ validation ↔ diff ↔ export | 0.2.x — see [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) for experimental areas |
 
-> **0.1.x stability** — Core `DataContract` APIs are stable; plugins, registry publish, and some quality rules are experimental. See [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) before adopting in production.
+> **0.2.x stability** — Core `DataContract` APIs are stable; plugins, registry publish, and some quality rules are experimental. ODCS document conformance uses [pyodcs](https://pypi.org/project/pyodcs/) (`apiVersion: v3.1.0` only). See [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) before adopting in production.
 
 ## Installation
 

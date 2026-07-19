@@ -139,12 +139,19 @@ def test_fetch_contract_without_version_uses_base_path() -> None:
 
 def test_fetch_contract_odcs() -> None:
     payload = {
-        "apiVersion": "v3.0.0",
+        "apiVersion": "v3.1.0",
         "kind": "DataContract",
         "id": "test",
         "name": "Test",
         "version": "1.0.0",
-        "schema": [{"name": "id", "logicalType": "string", "required": True}],
+        "status": "draft",
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string", "required": True}],
+            }
+        ],
     }
     response = MagicMock()
     payload_bytes = json.dumps(payload).encode()

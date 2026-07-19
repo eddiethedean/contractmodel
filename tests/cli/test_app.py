@@ -39,15 +39,21 @@ def test_diff_breaking_exit_code() -> None:
     old_path = EXAMPLES_DIR / "customer_events.odcs.yaml"
     new_path = Path(__file__).parent / "reduced.yaml"
     new_path.write_text(
-        "apiVersion: v3.0.0\n"
+        "apiVersion: v3.1.0\n"
         "kind: DataContract\n"
         "id: customer-events\n"
         "name: Customer Events\n"
         "version: 2.0.0\n"
+        "status: draft\n"
         "schema:\n"
-        "  - name: event_id\n"
-        "    logicalType: uuid\n"
-        "    required: true\n"
+        "  - name: customer_events\n"
+        "    logicalType: object\n"
+        "    properties:\n"
+        "      - name: event_id\n"
+        "        logicalType: string\n"
+        "        required: true\n"
+        "        logicalTypeOptions:\n"
+        "          format: uuid\n"
     )
     try:
         result = runner.invoke(app, ["diff", str(old_path), str(new_path)])

@@ -119,7 +119,9 @@ def fetch_contract(
     try:
         if "schema" in data and isinstance(data["schema"], list):
             from contractmodel.adapters.odcs import import_odcs
+            from contractmodel.adapters.odcs_conformance import validate_odcs_document
 
+            validate_odcs_document(data)
             return import_odcs(data)
         return CanonicalContract.model_validate(data)
     except (ValidationError, OdcsImportError) as exc:

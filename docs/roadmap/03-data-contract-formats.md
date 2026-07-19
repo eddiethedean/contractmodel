@@ -39,7 +39,7 @@ before expanding the adapter set.
 
 | Format | Import | Export | Status | Tier | Notes |
 |--------|--------|--------|--------|------|-------|
-| **ODCS** (Open Data Contract Standard) | Shipped | Shipped | **Shipped** | P0 | Primary external contract standard; extensions preserved |
+| **ODCS** (Open Data Contract Standard) | Shipped | Shipped | **Shipped** | P0 | Primary external standard; document conformance via **pyodcs** (`v3.1.0`); CCM mapping in ContractModel |
 | **JSON Schema** (Draft 2020-12) | Planned | Shipped | **Partial** | P1 | Export complete; import adapter needed for round-trip |
 | **OpenAPI 3.x** | Planned | Shipped | **Partial** | P1 | Schema object export; full document import/export later |
 | **AsyncAPI 2.x / 3.x** | Planned | Planned | **Planned** | P2 | Event-driven and messaging contracts |
