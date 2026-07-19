@@ -4,23 +4,22 @@
 
 ContractModel provides a complete developer-first data contract lifecycle for Python.
 
+ContractModel owns **what** a valid data contract means. Downstream tools (for
+example ETLantic) own **where and when** that contract is applied. Execution
+plugins own **how** a check runs on a backend. See [ROADMAP.md](../ROADMAP.md).
+
 ## Architecture
 
 ```text
 External Contract Formats
-  - CCM (native YAML/JSON)
-  - ODCS
-  - JSON Schema
-  - OpenAPI
-  - Pydantic
-  - Avro
-  - Protobuf
-  - Parquet schema
-  - dbt
-  - AsyncAPI
-  - Delta Lake / Iceberg
-  - RDF / SHACL / OWL
-  - (see docs/roadmap/03-data-contract-formats.md)
+  Shipped (0.1.x):
+    CCM (native YAML/JSON) · ODCS · Pydantic
+    JSON Schema / OpenAPI / Markdown export
+    RDF / SHACL / OWL export (semantic extra)
+  Planned after 0.4 (adapter/fidelity framework):
+    JSON Schema import · Avro · Protobuf · Parquet schema · dbt
+    AsyncAPI · Delta Lake / Iceberg · catalogs
+  Full catalog: docs/roadmap/03-data-contract-formats.md
         |
         v
 Import Adapters
@@ -53,14 +52,29 @@ Canonical Contract Model
 - Full Great Expectations replacement.
 - Full ontology reasoner.
 - Distributed streaming validation engine.
+- Absorbing SQL, Spark, scheduling, or pipeline orchestration (those stay in
+  consumers and execution plugins).
 
-## v1 Goals
+## Current release (0.1.x)
 
-- Stable Python API.
+- Stable Python API (`DataContract` facade).
 - ODCS import/export.
 - Pydantic V2 model generation.
 - Record, JSON, CSV, Parquet, Pandas, and Polars validation.
 - Contract diffing and breaking-change detection.
 - CLI.
-- Plugin interfaces.
+- Plugin interfaces (experimental).
 - Semantic metadata export stubs.
+
+## Toward 1.0
+
+| Release | Focus |
+|---------|--------|
+| **0.2** | **Shipped** — semantic kernel: wire CCM, descriptors, fingerprints, public integration API |
+| **0.3** | Bounded, redactable validation protocol |
+| **0.4** | Adapter/fidelity framework; then new formats |
+| **0.5–0.9** | Compatibility, trust, CLI/DX, conformance |
+| **1.0** | Frozen public schemas and ETLantic-ready stable APIs |
+
+Detail: [ROADMAP.md](../ROADMAP.md) and
+[CONTRACTMODEL_UPGRADE_PLAN.md](../CONTRACTMODEL_UPGRADE_PLAN.md).

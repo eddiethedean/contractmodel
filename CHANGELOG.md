@@ -2,12 +2,40 @@
 
 ## Unreleased
 
-### Known limitations (deferred to 0.2.0+)
+### Known limitations
 
-- `FULL` compatibility mode aliases `BACKWARD` only
-- Schema-level diff for quality, governance, semantics, and indexes
-- Lossy ODCS import/export for non-schema sections
-- `QUALITY_ONLY` still runs dataset uniqueness checks
+Mapped to [ROADMAP.md](ROADMAP.md) releases:
+
+| Limitation | Target |
+|------------|--------|
+| Bounded streaming validation, redaction by default, validation-engine conformance | **0.3** |
+| Structured adapter fidelity framework; new format adapters | **0.4** |
+| `FULL` compatibility is a true producer+consumer mode (today aliases `BACKWARD`); schema-level quality/governance/semantics/index diffs | **0.5** |
+| Fail-closed plugin/registry trust | **0.6** |
+| `QUALITY_ONLY` still runs dataset uniqueness checks | **0.3** (validation protocol) |
+
+## 0.2.0 — 2026-07-19
+
+### Semantic kernel and integration API
+
+- Publish wire identity `contractmodel.ccm/1` with packaged JSON Schema (`export_ccm_json_schema` / `load_ccm_json_schema`)
+- Add immutable `ContractDescriptor` stack and `describe_contract` / `DataContract.describe`
+- Add stable SHA-256 `fingerprint_contract` / `canonical_bytes` with documented participation rules
+- Preserve contract identity across ODCS → Pydantic → CCM via `ContractModel` ClassVars
+- Add `is_contract_model` / `resolve_contract_model` recognition helpers
+- Add public `LoadingPolicy` for contract document loading (roots, bytes, depth, formats, ODCS versions)
+- Add extension namespace/size budgets (`ExtensionBudgetError`)
+- Support ODCS nested `properties` / `items` ↔ CCM `children`
+- Pin `pydantic>=2.7,<3`; publish supported ODCS versions `v3.0.0` and `v3.1.0` (default export `v3.1.0`)
+- Classify export targets via `export_stability` (`stable` / `provisional` / `experimental` / `private`)
+
+### Correctness fixes (pre-release)
+
+- Scope `.gitignore` `/models.py` so `descriptor/models.py` is packaged in wheels
+- Deep-freeze descriptor indexes/constraints; track `DataContract.source_format` for provenance
+- Harden `LoadingPolicy`: content vs encoding gates, nested extension budgets, in-memory `max_bytes`, intermediate symlink blocking, ODCS-only `require_odcs_version`
+- Prefer CCM when `contract_id` is present; canonicalize numeric fingerprint forms; reject non-finite `Decimal`
+- Emit identity ClassVars from CLI `generate`; replace fragile `ccm_json_schema_path` with `ccm_json_schema_text`
 
 ## 0.1.2 — 2026-06-24
 

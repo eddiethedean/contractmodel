@@ -135,3 +135,12 @@ class FieldConstraints(BaseModel):
 ## Key Rule
 
 All adapters must convert into the CCM first. No validation engine, exporter, or plugin should depend directly on ODCS structures.
+
+## Wire identity (`contractmodel.ccm/1`)
+
+0.2 publishes a versioned wire schema (`CCM_WIRE_VERSION`) and packaged JSON
+Schema via `export_ccm_json_schema()`. Integrators should prefer immutable
+`describe_contract` descriptors and `fingerprint_contract` over mutating live
+`CanonicalContract` instances or walking Pydantic `model_fields`. New format
+adapters wait for the **0.4** fidelity protocol.
+

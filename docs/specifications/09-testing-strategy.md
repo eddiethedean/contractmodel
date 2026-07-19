@@ -67,3 +67,15 @@ Use examples in `/examples`.
 ## Test Philosophy
 
 Every bug fix must include a regression test.
+
+## Toward 1.0 (ROADMAP)
+
+Additional suites land with the release plan in [ROADMAP.md](../../ROADMAP.md):
+
+| Release | Testing focus |
+|---------|----------------|
+| **0.3** | Validation-engine conformance; budget/redaction/cancellation properties |
+| **0.4** | Golden and property-based adapter round-trips; fidelity findings |
+| **0.5** | Compatibility fixtures across nested/rename/nullability/enum/constraint changes |
+| **0.6** | Adversarial plugin/registry conformance |
+| **0.8** | Cross-OS/Python matrices, isolated wheels, Hypothesis/fuzz corpora, performance budgets |

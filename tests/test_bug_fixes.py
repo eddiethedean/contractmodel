@@ -34,9 +34,9 @@ def test_is_odcs_document_rejects_ccm_with_kind_only() -> None:
     assert is_odcs_document({"kind": "DataContract", "contract_id": "x"}) is False
 
 
-def test_is_odcs_document_accepts_explicit_format() -> None:
+def test_is_odcs_document_rejects_ccm_even_with_format() -> None:
     doc = {"format": "odcs", "contract_id": "x", "name": "X", "version": "1"}
-    assert is_odcs_document(doc) is True
+    assert is_odcs_document(doc) is False
 
 
 def test_odcs_schema_item_must_be_object() -> None:

@@ -291,3 +291,40 @@ class RegistryError(ContractModelError): ...
 ```python
 from contractmodel.examples import example_path, load_example, list_examples, read_example_text
 ```
+
+## Public integration API (0.2)
+
+```python
+from contractmodel import (
+    DataContract,
+    LoadingPolicy,
+    describe_contract,
+    fingerprint_contract,
+    is_contract_model,
+    resolve_contract_model,
+    export_ccm_json_schema,
+    export_stability,
+)
+
+descriptor = describe_contract(DataContract.from_odcs("contract.yaml"))
+descriptor.identity.contract_id
+descriptor.schema_view.fields
+descriptor.fingerprint
+descriptor.fidelity
+
+policy = LoadingPolicy(max_bytes=100_000)
+DataContract.load("contract.yaml", policy=policy)
+```
+
+| Capability | Status |
+|------------|--------|
+| Recognition helpers | **Shipped** — `is_contract_model` / `resolve_contract_model` |
+| Immutable descriptor | **Shipped** — `describe_contract` / `ContractDescriptor` |
+| Fingerprints / `ccm/1` | **Shipped** — `fingerprint_contract`, `export_ccm_json_schema` |
+| Safe loading policy | **Shipped** — `LoadingPolicy` on loaders |
+| Compatibility report | Planned structured report expansion (**0.5**) |
+| Validation spec/result | Budgets, redaction, cancellation (**0.3**) |
+| Adapter fidelity protocol | Full adapter protocol (**0.4**); descriptor fidelity findings shipped for ODCS import |
+
+Design detail: [CONTRACTMODEL_UPGRADE_PLAN.md](../CONTRACTMODEL_UPGRADE_PLAN.md).
+Stability guidance for integrators: [STABILITY.md](../../STABILITY.md).

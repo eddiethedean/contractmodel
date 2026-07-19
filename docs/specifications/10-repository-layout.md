@@ -1,11 +1,13 @@
 # Repository layout
 
-Current layout for ContractModel 0.1.x.
+Current layout for ContractModel 0.1.x. Active release plan:
+[ROADMAP.md](../../ROADMAP.md).
 
 ```text
 contractmodel/
   pyproject.toml
   README.md
+  ROADMAP.md              # 0.2 → 1.0 release plan
   CONTRIBUTING.md
   CODE_OF_CONDUCT.md
   STABILITY.md
@@ -60,6 +62,8 @@ contractmodel/
     data/
   docs/
     README.md
+    ROADMAP.md            # Symlink to ../ROADMAP.md (MkDocs)
+    CONTRACTMODEL_UPGRADE_PLAN.md
     tutorials/
     reference/
     architecture/

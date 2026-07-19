@@ -1,4 +1,13 @@
-# Implementation Roadmap
+# Implementation Roadmap (historical)
+
+Phases **0–11** below are the completed 0.1.x bootstrap work.
+
+The active 0.2 → 1.0 plan is **[ROADMAP.md](../ROADMAP.md)** (repository root;
+symlinked here for the docs site). Design detail is in
+[`CONTRACTMODEL_UPGRADE_PLAN.md`](../CONTRACTMODEL_UPGRADE_PLAN.md).
+Format status remains in [03-data-contract-formats.md](03-data-contract-formats.md).
+
+---
 
 ## Phase 0: Repository Bootstrap
 
@@ -88,26 +97,9 @@
 - API reference.
 - Example contracts.
 
-## Phase 12–14: Data Contract Format Adapters
+## Format adapters (deferred)
 
-See [03-data-contract-formats.md](03-data-contract-formats.md) for the full format catalog, status, and priority tiers.
-
-### Phase 12 — P1 interchange (target 0.2.0)
-
-- JSON Schema import.
-- OpenAPI document import.
-- Avro import/export.
-- Protobuf import/export.
-- Parquet schema import/export.
-- dbt `schema.yml` import.
-
-### Phase 13 — P2 lakehouse and events (target 0.3.0)
-
-- Delta Lake, Iceberg, Glue, BigQuery, Snowflake adapters.
-- AsyncAPI, CloudEvents, Spark StructType adapters.
-
-### Phase 14 — P3 ecosystem (target 0.4.0+)
-
-- Great Expectations, Soda, LinkML, JSON-LD.
-- Enterprise catalog plugins (DataHub, Collibra, Alation, Atlan).
-- W3C CSV Schema, XSD, Hive, ORC.
+Earlier drafts scheduled P1 interchange adapters for 0.2.0. The active roadmap
+defers new format adapters until **0.4** (adapter and fidelity framework). See
+[ROADMAP.md](../ROADMAP.md) and
+[03-data-contract-formats.md](03-data-contract-formats.md).

@@ -72,3 +72,26 @@ class ValidationMode(str, Enum):
 - CM_QUALITY_FRESHNESS
 - CM_QUALITY_COMPLETENESS
 - CM_RUNTIME_ERROR
+
+## Current vs target behavior
+
+### Current (0.1.x)
+
+- `validate_records()` materializes iterables.
+- File and dataframe validation are whole-input oriented.
+- Results may include raw invalid values (useful locally; unsafe by default for
+  logs, SARIF, and pipeline evidence).
+- Optional `max_bytes` / `max_rows` bound some entry points.
+
+### Target (0.3 — bounded validation protocol)
+
+See [ROADMAP.md](../../ROADMAP.md):
+
+- Versioned immutable validation specification and result schemas
+- Deterministic diagnostic budgets; redact values by default
+- Iterator/batch validation without unconditional materialization
+- Cancellation, timeout, and partial-result semantics
+- Exact / approximate / unsupported / skipped / failed check outcomes
+- Invalid rows only via opaque runtime handles
+- Reference engine separate from optional engine adapters
+- Validation-engine conformance suite

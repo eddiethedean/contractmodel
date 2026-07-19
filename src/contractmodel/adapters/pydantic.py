@@ -51,6 +51,10 @@ def generate_pydantic_model(
     forbid_extra: bool = True,
 ) -> type[BaseModel]:
     """Generate a Pydantic V2 model from a CanonicalContract."""
+    from contractmodel.fingerprint import fingerprint_contract
+    from contractmodel.model import attach_contract_identity
+    from contractmodel.versions import CCM_WIRE_VERSION
+
     model_name = class_name or _to_class_name(contract.name)
     field_defs = _build_field_definitions(
         contract.contract_schema.fields,
@@ -66,11 +70,24 @@ def generate_pydantic_model(
             (ContractModel,),
             {"model_config": ConfigDict(extra="ignore")},
         )
-    return create_model(
+    model = create_model(
         model_name,
         __base__=base,
         **field_defs,
     )
+    source_version = contract.extensions.get("apiVersion")
+    attach_contract_identity(
+        cast(type[ContractModel], model),
+        contract_id=contract.contract_id,
+        version=contract.version,
+        name=contract.name,
+        fingerprint=fingerprint_contract(contract),
+        kind=contract.kind.value,
+        source_format="odcs" if source_version is not None else "ccm",
+        source_version=str(source_version) if source_version is not None else None,
+        ccm_wire_version=CCM_WIRE_VERSION,
+    )
+    return model
 
 
 def contract_from_pydantic(
@@ -78,19 +95,43 @@ def contract_from_pydantic(
     *,
     name: str | None = None,
 ) -> CanonicalContract:
-    """Convert a Pydantic model into a CanonicalContract."""
-    contract_name = name or model.__name__
-    contract_id = _to_contract_id(contract_name)
+    """Convert a Pydantic model into a CanonicalContract.
+
+    When ``model`` carries ContractModel identity ClassVars, those values are
+    preserved. Plain BaseModel classes fall back to a slug id and version
+    ``1.0.0``.
+    """
+    from contractmodel.core.types import ContractKind
+
+    contract_name = name or getattr(model, "__contract_name__", None) or model.__name__
+    contract_id = getattr(model, "__contract_id__", None) or _to_contract_id(contract_name)
+    version = getattr(model, "__contract_version__", None) or "1.0.0"
+    kind_raw = getattr(model, "__contract_kind__", None)
+    try:
+        kind = ContractKind(kind_raw) if kind_raw else ContractKind.DATASET
+    except ValueError:
+        kind = ContractKind.DATASET
+
     fields = [
         _field_from_pydantic_field(field_name, field_info)
         for field_name, field_info in model.model_fields.items()
     ]
 
+    extensions: dict[str, Any] = {}
+    source_version = getattr(model, "__source_version__", None)
+    if source_version is not None:
+        extensions["apiVersion"] = source_version
+    source_format = getattr(model, "__source_format__", None)
+    if source_format == "odcs":
+        extensions.setdefault("kind", "DataContract")
+
     return CanonicalContract(
         contract_id=contract_id,
         name=contract_name,
-        version="1.0.0",
+        version=version,
+        kind=kind,
         schema=ContractSchema(fields=fields),
+        extensions=extensions,
     )
 
 

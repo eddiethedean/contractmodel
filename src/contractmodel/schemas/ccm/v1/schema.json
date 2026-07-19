@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contractmodel.dev/schemas/ccm/1",
+  "title": "contractmodel.ccm/1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_id", "name", "version", "schema"],
+  "properties": {
+    "ccm_wire_version": {
+      "type": "string",
+      "const": "contractmodel.ccm/1"
+    },
+    "contract_id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "dataset",
+        "table",
+        "file",
+        "stream",
+        "event",
+        "api_payload",
+        "semantic_entity"
+      ]
+    },
+    "description": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "deprecated", "retired"]
+    },
+    "ownership": { "$ref": "#/$defs/ownership" },
+    "schema": { "$ref": "#/$defs/schema" },
+    "quality": { "$ref": "#/$defs/quality" },
+    "service_level": { "$ref": "#/$defs/service_level" },
+    "lineage": { "$ref": "#/$defs/lineage" },
+    "semantics": { "$ref": "#/$defs/semantics" },
+    "governance": { "$ref": "#/$defs/governance" },
+    "metadata": { "type": "object" },
+    "extensions": { "type": "object" }
+  },
+  "$defs": {
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "role": { "type": ["string", "null"] }
+      }
+    },
+    "ownership": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": { "type": ["string", "null"] },
+        "team": { "type": ["string", "null"] },
+        "contacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contact" }
+        },
+        "metadata": { "type": "object" }
+      }
+    },
+    "field_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_value": {},
+        "max_value": {},
+        "min_length": { "type": ["integer", "null"] },
+        "max_length": { "type": ["integer", "null"] },
+        "pattern": { "type": ["string", "null"] },
+        "enum_values": { "type": ["array", "null"] },
+        "unique": { "type": "boolean" },
+        "immutable": { "type": "boolean" },
+        "allowed_values": { "type": ["array", "null"] },
+        "disallowed_values": { "type": ["array", "null"] },
+        "custom": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": ["string", "null"] },
+              "expression": { "type": ["string", "null"] },
+              "metadata": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "logical_type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "logical_type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "decimal",
+            "boolean",
+            "date",
+            "time",
+            "datetime",
+            "duration",
+            "array",
+            "object",
+            "map",
+            "binary",
+            "uuid",
+            "uri",
+            "email",
+            "enum",
+            "any"
+          ]
+        },
+        "required": { "type": "boolean" },
+        "nullable": { "type": "boolean" },
+        "description": { "type": ["string", "null"] },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "default": {},
+        "examples": { "type": "array" },
+        "constraints": { "$ref": "#/$defs/field_constraints" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/field" }
+        },
+        "semantic": { "type": ["object", "null"] },
+        "metadata": { "type": "object" },
+        "extensions": { "type": "object" }
+      }
+    },
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields"],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/field" }
+        },
+        "primary_key": { "type": "array", "items": { "type": "string" } },
+        "indexes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "fields": { "type": "array", "items": { "type": "string" } },
+              "unique": { "type": "boolean" },
+              "metadata": { "type": "object" }
+            }
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": ["string", "null"] },
+              "expression": { "type": ["string", "null"] },
+              "fields": { "type": "array", "items": { "type": "string" } },
+              "metadata": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "rules": { "type": "array" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "service_level": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "freshness": { "type": ["string", "null"] },
+        "availability": { "type": ["string", "null"] },
+        "latency": { "type": ["string", "null"] },
+        "metadata": { "type": "object" }
+      }
+    },
+    "lineage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "upstream": { "type": "array", "items": { "type": "string" } },
+        "downstream": { "type": "array", "items": { "type": "string" } },
+        "metadata": { "type": "object" }
+      }
+    },
+    "semantics": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "namespaces": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "metadata": { "type": "object" }
+      }
+    },
+    "governance": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "classification": { "type": ["string", "null"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "policies": { "type": "array", "items": { "type": "string" } },
+        "metadata": { "type": "object" }
+      }
+    }
+  }
+}

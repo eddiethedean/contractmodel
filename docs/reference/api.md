@@ -1,6 +1,10 @@
 # API reference
 
-User-facing API for ContractModel 0.1.x. See [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) for stability tiers.
+User-facing API for ContractModel **0.2.x**. See
+[STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md)
+for stability tiers and
+[ROADMAP.md](https://github.com/eddiethedean/contractmodel/blob/main/ROADMAP.md)
+for upcoming releases.
 
 ## Package exports
 
@@ -11,6 +15,14 @@ from contractmodel import (
     CanonicalContract,
     ContractField,
     ContractSchema,
+    ContractDescriptor,
+    LoadingPolicy,
+    describe_contract,
+    fingerprint_contract,
+    is_contract_model,
+    resolve_contract_model,
+    export_ccm_json_schema,
+    export_stability,
     ValidationResult,
     ValidationErrorDetail,
     ValidationWarningDetail,
@@ -30,6 +42,20 @@ from contractmodel import (
     examples,
     __version__,
 )
+```
+
+## Integration helpers (0.2)
+
+```python
+descriptor = contract.describe()  # or describe_contract(contract)
+descriptor.identity.contract_id
+descriptor.schema_view  # nested fields, nullability, constraints
+descriptor.fingerprint
+descriptor.fidelity
+
+DataContract.load(path, policy=LoadingPolicy(max_bytes=1_000_000))
+is_contract_model(MyModel)
+fingerprint_contract(contract.ccm)
 ```
 
 ## DataContract

@@ -31,8 +31,10 @@ body:
   - type: checkboxes
     id: stability
     attributes:
-      label: Stability area
+      label: Stability and roadmap
       options:
+        - label: This aligns with ROADMAP.md (or I explain why it should reorder priorities)
+          required: false
         - label: This affects an experimental API (plugins, registry, quality rules)
           required: false
         - label: I have read STABILITY.md

@@ -229,11 +229,17 @@ See the [CLI walkthrough](https://github.com/eddiethedean/contractmodel/blob/mai
 | **DataContract** | Main Python facade — load, validate, diff, and export contracts |
 | **`contract`** | CLI installed with the package |
 
+## What's next
+
+**0.2.0** ships the semantic kernel (descriptors, fingerprints, recognition,
+`LoadingPolicy`). Next up is **0.3** bounded validation, then the **0.4**
+adapter/fidelity framework before new format adapters. See [ROADMAP.md](ROADMAP.md).
+
 ## Performance
 
 Validation loads full datasets into memory. For 0.1.x, keep files under **~100 MB** and **~1 million rows** unless you benchmark larger workloads. Call `to_pydantic()` once per contract and reuse the model class.
 
-Optional `max_bytes` and `max_rows` on validation entry points guard against oversized payloads. Non-positive limits raise `ValueError`.
+Optional `max_bytes` and `max_rows` on validation entry points guard against oversized payloads. Non-positive limits raise `ValueError`. Bounded streaming and redaction by default are planned for **0.3**.
 
 ## Plugins (experimental)
 
@@ -265,6 +271,7 @@ See [SECURITY.md](https://github.com/eddiethedean/contractmodel/blob/main/SECURI
 | Error codes (`CM_*`) | [docs/reference/error-codes.md](https://github.com/eddiethedean/contractmodel/blob/main/docs/reference/error-codes.md) |
 | Examples | [examples/README.md](https://github.com/eddiethedean/contractmodel/blob/main/examples/README.md) |
 | Changelog | [CHANGELOG.md](https://github.com/eddiethedean/contractmodel/blob/main/CHANGELOG.md) |
+| Roadmap | [ROADMAP.md](https://github.com/eddiethedean/contractmodel/blob/main/ROADMAP.md) |
 | Architecture | [docs/architecture/](https://github.com/eddiethedean/contractmodel/tree/main/docs/architecture) |
 | Format roadmap | [docs/roadmap/03-data-contract-formats.md](https://github.com/eddiethedean/contractmodel/blob/main/docs/roadmap/03-data-contract-formats.md) |
 

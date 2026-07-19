@@ -20,6 +20,8 @@ print("changes:", len(diff.breaking_changes) + len(diff.non_breaking_changes))
 
 `CompatibilityMode.BACKWARD` flags changes that would break existing consumers (removed fields, tightened constraints). Renames linked by field aliases may be classified as non-breaking.
 
+On 0.1.x, `CompatibilityMode.FULL` aliases `BACKWARD`. True FULL (producer+consumer) semantics are planned for **0.5** — see [ROADMAP.md](../ROADMAP.md).
+
 ```python
 for change in diff.breaking_changes:
     print(change.change_type, change.field, change.message)

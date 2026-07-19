@@ -6,6 +6,10 @@
 - Use Python entry points.
 - Keep plugin contracts small and stable.
 
+Plugin discovery without importing code, allowlists, provenance, and
+capability validation remain experimental until ROADMAP **0.6**. See
+[ROADMAP.md](../../ROADMAP.md) and [SECURITY.md](../../SECURITY.md).
+
 ## Plugin Types
 
 ```python

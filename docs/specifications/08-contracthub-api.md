@@ -64,3 +64,7 @@ Future:
 - OIDC
 - SSO
 - Fine-grained RBAC
+
+Fail-closed registry policy (scheme/host/address, redirects, TLS, private
+targets, credential origin binding) is tracked under ROADMAP **0.6**. See
+[ROADMAP.md](../../ROADMAP.md).

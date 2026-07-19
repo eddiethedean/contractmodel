@@ -32,7 +32,9 @@ Welcome to the ContractModel docs. Start here if you cloned the repo or want dep
 
 - [System overview](architecture/01-system-overview.md)
 - [Canonical Contract Model](architecture/02-canonical-contract-model.md)
-- [Implementation roadmap](roadmap/01-implementation-roadmap.md)
+- [Roadmap (0.2 → 1.0)](ROADMAP.md)
+- [Upgrade plan](CONTRACTMODEL_UPGRADE_PLAN.md)
+- [Historical bootstrap phases](roadmap/01-implementation-roadmap.md)
 - [Data contract formats](roadmap/03-data-contract-formats.md)
 
 Contributor specifications live in the repository under `docs/specifications/` (not published to this site).

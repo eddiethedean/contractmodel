@@ -48,8 +48,21 @@ mkdocs serve
 - `tests/` — pytest suite (mirrors package structure)
 - `examples/` — sample contracts and data (bundled into the wheel)
 - `docs/` — user docs, tutorials, and contributor specifications
+- `ROADMAP.md` — active 0.2 → 1.0 release plan
 
 See [docs/specifications/10-repository-layout.md](docs/specifications/10-repository-layout.md) for the full tree.
+
+## Priorities
+
+Follow **[ROADMAP.md](ROADMAP.md)** when choosing what to build next:
+
+1. **0.2** — semantic kernel and public integration API (descriptors, fingerprints, recognition helpers, loading policy)
+2. **0.3** — bounded validation protocol
+3. **0.4** — adapter/fidelity framework, then new formats
+4. Compatibility (**0.5**), trust (**0.6**), CLI/DX (**0.7**), conformance (**0.8**)
+
+Prefer semantic depth over new format adapters. Design detail:
+[`docs/CONTRACTMODEL_UPGRADE_PLAN.md`](docs/CONTRACTMODEL_UPGRADE_PLAN.md).
 
 ## Pull requests
 

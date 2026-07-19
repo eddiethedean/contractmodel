@@ -14,11 +14,14 @@ All external formats adapt **in** and **out** of the [Canonical Contract Model (
 
 ## Priority tiers
 
+Aligned with [ROADMAP.md](../ROADMAP.md): semantic kernel and validation come
+before expanding the adapter set.
+
 | Tier | Target release | Goal |
 |------|----------------|------|
 | **P0** | 0.1.x | Formats required for a credible 0.1 data-contract library |
-| **P1** | 0.2.x | High-demand interchange formats for Python data teams |
-| **P2** | 0.3.x | Lakehouse, streaming, and enterprise catalog integration |
+| **P1** | 0.4.x+ | High-demand interchange after the adapter/fidelity framework |
+| **P2** | Later 0.x | Lakehouse, streaming, and enterprise catalog integration |
 | **P3** | Future | Ecosystem-specific or plugin-only formats |
 
 ---
@@ -146,16 +149,21 @@ These are **data interchange** formats validated *against* a contract, not contr
 
 ## Implementation phases (format adapters)
 
-### Phase 12 — P1 interchange (0.2.0)
+Per [ROADMAP.md](../ROADMAP.md), **0.4** publishes the adapter/fidelity
+protocol. New formats follow that protocol rather than defining semantics
+incrementally.
 
-- JSON Schema import adapter
+### After 0.4 — P1 interchange
+
+- Graduate ODCS under the adapter protocol
+- JSON Schema import (export already shipped)
 - OpenAPI document import (schema components → CCM)
 - Avro import/export
 - Protobuf import/export
 - Parquet schema import/export
 - dbt `schema.yml` import (columns, tests, descriptions)
 
-### Phase 13 — P2 lakehouse and events (0.3.0)
+### Later 0.x — P2 lakehouse and events
 
 - Delta Lake table schema adapter
 - Apache Iceberg schema adapter
@@ -164,7 +172,7 @@ These are **data interchange** formats validated *against* a contract, not contr
 - CloudEvents payload binding
 - Spark StructType JSON adapter
 
-### Phase 14 — P3 ecosystem and plugins (0.4.0+)
+### Future — P3 ecosystem and plugins
 
 - Great Expectations / Soda bridges
 - LinkML / JSON-LD semantic import
@@ -178,17 +186,22 @@ These are **data interchange** formats validated *against* a contract, not contr
 Every format adapter must:
 
 1. Convert to or from `CanonicalContract` (never skip the CCM).
-2. Report lossy transformations via `import_warnings` or export metadata.
+2. Report lossy transformations via structured fidelity results (exact,
+   normalized, extended, lossy, unsupported, or rejected).
 3. Include round-trip tests where bidirectional support is claimed.
 4. Document unsupported CCM fields explicitly in adapter README notes.
 5. Register as a core adapter or `contractmodel.exporters` / import entry point when appropriate.
+6. Declare format/version ranges, capabilities, and dependency tier via the
+   0.4+ adapter protocol when available.
 
 ---
 
 ## Related documents
 
+- [ROADMAP.md](../ROADMAP.md) — active 0.2 → 1.0 release plan
+- [Upgrade plan](../CONTRACTMODEL_UPGRADE_PLAN.md) — findings and acceptance criteria
 - [System overview](../architecture/01-system-overview.md) — adapter architecture
 - [ODCS mapping spec](../specifications/02-odcs-pydantic-mapping.md) — reference adapter design
-- [Implementation roadmap](01-implementation-roadmap.md) — delivery phases 0–11
+- [Historical bootstrap](01-implementation-roadmap.md) — completed phases 0–11
 - [GitHub epics](02-github-epics-and-issues.md) — tracking epics per format group
 - [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) — API stability tiers

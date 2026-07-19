@@ -1,5 +1,13 @@
 # GitHub Epics and Issues
 
+Issue-tracking skeleton. The active release plan is
+**[ROADMAP.md](../ROADMAP.md)**.
+
+- **Epics 1–10** — completed 0.1.x bootstrap work
+- **Epics 11–13, 15–16** — track ROADMAP **0.2–0.6** (semantic kernel, validation,
+  adapter framework, compatibility, trust)
+- **Epics 14, 17–20** — format and ecosystem adapters **after 0.4**
+
 ## Epic 1: Repository Bootstrap
 
 - Create pyproject.toml.
@@ -87,7 +95,31 @@
 - OWL exporter.
 - Semantic mapping tests.
 
-## Epic 11: Format Adapters (P1 — 0.2.0)
+## Epic 11: Semantic Kernel and Integration API (0.2)
+
+See [ROADMAP.md](../ROADMAP.md) § 0.2.
+
+- Publish `contractmodel.ccm/1` wire schema.
+- Immutable descriptor, fingerprint, and provenance APIs.
+- Recognition and annotation-resolution helpers.
+- Public bounded loading policy.
+- Identity preservation across ODCS ↔ Pydantic ↔ CCM.
+
+## Epic 12: Bounded Validation Protocol (0.3)
+
+- Versioned validation specification and result schemas.
+- Diagnostic budgets, redaction, cancellation, and streaming.
+- Reference engine vs optional engine adapters.
+- Validation-engine conformance suite.
+
+## Epic 13: Adapter and Fidelity Framework (0.4)
+
+- Versioned adapter protocol and static manifest.
+- Structured fidelity results.
+- Graduate ODCS; then JSON Schema import.
+- Golden and property-based round-trip suites.
+
+## Epic 14: Format Adapters (P1 — after 0.4)
 
 See [03-data-contract-formats.md](03-data-contract-formats.md).
 
@@ -98,7 +130,19 @@ See [03-data-contract-formats.md](03-data-contract-formats.md).
 - Parquet schema import/export adapter.
 - dbt `schema.yml` import adapter.
 
-## Epic 12: Lakehouse and Catalog Adapters (P2 — 0.3.0)
+## Epic 15: Compatibility and Evolution (0.5)
+
+- Versioned compatibility policy independent of CCM.
+- Structured findings for nested, rename, nullability, enum, and constraint changes.
+- Machine-readable migration actions.
+
+## Epic 16: Trust, Plugins, and Registries (0.6)
+
+- Manifest inspection without importing entry points.
+- Allowlists, provenance, and fail-closed registry policy.
+- Credential origin binding.
+
+## Epic 17: Lakehouse and Catalog Adapters (P2)
 
 - Delta Lake table schema adapter.
 - Apache Iceberg schema adapter.
@@ -106,21 +150,21 @@ See [03-data-contract-formats.md](03-data-contract-formats.md).
 - BigQuery schema adapter.
 - Snowflake schema adapter.
 
-## Epic 13: Event and Streaming Contracts (P2 — 0.3.0)
+## Epic 18: Event and Streaming Contracts (P2)
 
 - AsyncAPI import/export adapter.
 - CloudEvents payload binding adapter.
 - Spark StructType JSON adapter.
 - Kafka Schema Registry integration.
 
-## Epic 14: Quality and Semantic Import (P3)
+## Epic 19: Quality and Semantic Import (P3)
 
 - Great Expectations suite import/export.
 - SodaCL check import.
 - LinkML import/export.
 - JSON-LD contract documents.
 
-## Epic 15: Enterprise Catalog Plugins (P3 — plugin SDK)
+## Epic 20: Enterprise Catalog Plugins (P3 — plugin SDK)
 
 - DataHub exporter plugin.
 - Collibra exporter plugin.

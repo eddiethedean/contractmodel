@@ -79,3 +79,10 @@ Checks:
 - 3 IO error
 - 4 plugin error
 - 5 registry error
+
+## Toward 0.7
+
+The CLI should remain a projection of the public library API. ROADMAP **0.7**
+reorganizes workflows around `init`, `inspect`, `validate`, `diff`, `convert`,
+`export`, `doctor`, and optional `registry`, with standardized diagnostics.
+See [ROADMAP.md](../../ROADMAP.md).

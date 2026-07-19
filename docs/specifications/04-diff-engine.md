@@ -41,6 +41,11 @@ class CompatibilityMode(str, Enum):
     NONE = "none"
 ```
 
+On **0.1.x**, `FULL` aliases `BACKWARD` only. True producer+consumer FULL
+semantics, schema-level quality/governance/semantics/index diffs, and
+machine-readable migration actions are planned for **0.5**. See
+[ROADMAP.md](../../ROADMAP.md).
+
 ## API
 
 ```python

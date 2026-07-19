@@ -74,7 +74,7 @@ def init(
     content: dict[str, Any]
     if template == "odcs":
         content = {
-            "apiVersion": "v3.0.0",
+            "apiVersion": "v3.1.0",
             "kind": "DataContract",
             "id": "my-contract",
             "name": "My Contract",
@@ -356,24 +356,61 @@ def doctor() -> None:
 
 def _render_pydantic_model_source(model: type[BaseModel]) -> str:
     """Render an importable Python module for a generated model."""
+    from typing import get_args, get_origin
+
     lines = [
         "from __future__ import annotations",
+        "",
+        "from typing import ClassVar",
         "",
         "from contractmodel import ContractModel",
         "from pydantic import Field",
         "",
         f"class {model.__name__}(ContractModel):",
     ]
+
+    identity_attrs = [
+        ("__contract_id__", getattr(model, "__contract_id__", None)),
+        ("__contract_version__", getattr(model, "__contract_version__", None)),
+        ("__contract_name__", getattr(model, "__contract_name__", None)),
+        ("__contract_fingerprint__", getattr(model, "__contract_fingerprint__", None)),
+        ("__ccm_wire_version__", getattr(model, "__ccm_wire_version__", None)),
+        ("__contract_kind__", getattr(model, "__contract_kind__", None)),
+        ("__source_format__", getattr(model, "__source_format__", None)),
+        ("__source_version__", getattr(model, "__source_version__", None)),
+    ]
+    has_identity = False
+    for attr_name, attr_value in identity_attrs:
+        if attr_value is not None:
+            lines.append(f"    {attr_name}: ClassVar[str | None] = {attr_value!r}")
+            has_identity = True
+    if has_identity:
+        lines.append("")
+
+    def _annotation_name(annotation_obj: object) -> str:
+        origin = get_origin(annotation_obj)
+        if origin is list:
+            args = get_args(annotation_obj)
+            inner = _annotation_name(args[0]) if args else "object"
+            return f"list[{inner}]"
+        if origin is dict:
+            args = get_args(annotation_obj)
+            key = _annotation_name(args[0]) if args else "str"
+            value = _annotation_name(args[1]) if len(args) > 1 else "object"
+            return f"dict[{key}, {value}]"
+        if isinstance(annotation_obj, type) and issubclass(annotation_obj, BaseModel):
+            return annotation_obj.__name__
+        name = getattr(annotation_obj, "__name__", None)
+        if isinstance(name, str) and name:
+            return name
+        return str(annotation_obj).replace("typing.", "")
+
     if not model.model_fields:
-        lines.append("    pass")
+        if not has_identity:
+            lines.append("    pass")
     else:
         for name, field in model.model_fields.items():
-            annotation_obj = field.annotation
-            if isinstance(annotation_obj, type) and issubclass(annotation_obj, BaseModel):
-                annotation = annotation_obj.__name__
-            else:
-                annotation = getattr(annotation_obj, "__name__", None) or str(annotation_obj)
-                annotation = annotation.replace("typing.", "")
+            annotation = _annotation_name(field.annotation)
             if field.is_required():
                 lines.append(f"    {name}: {annotation}")
             else:

@@ -46,7 +46,7 @@ Thumbs.db
 .env.*
 !.env.example
 
-# Generated artifacts
-models.py
+# Generated artifacts (CLI `contract generate` default output at repo root only)
+/models.py
 site/
 *.log

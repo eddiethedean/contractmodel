@@ -17,6 +17,7 @@
 - [ ] `pytest` passes
 - [ ] `CHANGELOG.md` updated under **Unreleased** (user-visible changes)
 - [ ] Docs updated if public API or onboarding paths changed
+- [ ] Aligns with ROADMAP.md priorities (or justifies an exception)
 
 ## Test plan
 

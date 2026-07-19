@@ -59,3 +59,4 @@ Renames detected via field aliases are classified as non-breaking when the alias
 - [CLI walkthrough](cli-walkthrough.md)
 - [Error code catalog](../reference/error-codes.md)
 - [API reference](../reference/api.md)
+- [Roadmap](../ROADMAP.md) — what lands in 0.2+

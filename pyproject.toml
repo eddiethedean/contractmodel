@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "contractmodel"
-version = "0.1.2"
+version = "0.2.0"
 description = "Python-native data contracts powered by a Canonical Contract Model and Pydantic."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,7 +34,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "pydantic>=2.7",
+  "pydantic>=2.7,<3",
   "pyyaml>=6.0",
   "email-validator>=2.0",
   "typer>=0.12",

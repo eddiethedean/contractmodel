@@ -19,13 +19,21 @@ from contractmodel.adapters.pydantic import (
 from contractmodel.core.ccm import CanonicalContract, ContractField, ContractSchema
 from contractmodel.core.result import ValidationResult, ValidationWarningDetail
 from contractmodel.core.types import CompatibilityMode, ContractKind, ContractStatus, ValidationMode
+from contractmodel.descriptor import describe_contract
+from contractmodel.descriptor.models import ContractDescriptor
 from contractmodel.diff.engine import ContractDiff, diff_contracts
 from contractmodel.errors import OptionalDependencyError
 from contractmodel.export.json_schema import export_json_schema
 from contractmodel.export.markdown import export_markdown
 from contractmodel.export.openapi import export_openapi
+from contractmodel.extensions import validate_extensions
 from contractmodel.model import ContractModel
 from contractmodel.plugins.runtime import run_validator_plugins
+from contractmodel.policy import (
+    LoadingPolicy,
+    enforce_document_bounds,
+    resolve_contract_path,
+)
 from contractmodel.semantic.owl import export_owl
 from contractmodel.semantic.rdf import export_rdf
 from contractmodel.semantic.shacl import export_shacl
@@ -36,6 +44,21 @@ from contractmodel.validation.limits import (
     limit_exceeded_result,
     validate_limit_params,
 )
+from contractmodel.versions import normalize_odcs_api_version
+
+
+def _validate_field_tree_extensions(
+    fields: list[ContractField],
+    *,
+    path_prefix: str = "fields",
+) -> None:
+    for field in fields:
+        validate_extensions(field.extensions, path=f"{path_prefix}.{field.name}.extensions")
+        if field.children:
+            _validate_field_tree_extensions(
+                field.children,
+                path_prefix=f"{path_prefix}.{field.name}.children",
+            )
 
 
 class DataContract:
@@ -50,62 +73,109 @@ class DataContract:
         ccm: CanonicalContract,
         *,
         import_warnings: list[ValidationWarningDetail] | None = None,
+        source_format: str | None = None,
     ) -> None:
         self._ccm = ccm
         self._import_warnings = import_warnings or []
+        self._source_format = source_format
 
     @classmethod
-    def load(cls, path: str | Path) -> DataContract:
+    def load(
+        cls,
+        path: str | Path,
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load a contract from a file (``.yaml``/``.yml`` or ``.json`` by extension)."""
-        path = Path(path)
+        path = resolve_contract_path(path, policy)
         if path.suffix.lower() == ".json":
-            return cls.from_json(path)
-        return cls.from_yaml(path)
+            return cls.from_json(path, policy=policy)
+        return cls.from_yaml(path, policy=policy)
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> DataContract:
+    def from_yaml(
+        cls,
+        path: str | Path,
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load CCM or ODCS YAML from a file path (format auto-detected)."""
-        with Path(path).open(encoding="utf-8") as f:
+        path = resolve_contract_path(path, policy)
+        with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
         if not isinstance(data, dict):
             msg = "Contract YAML must contain a mapping"
             raise ValueError(msg)
-        return cls.from_dict(data)
+        return cls.from_dict(data, policy=policy)
 
     @classmethod
-    def from_json(cls, path: str | Path) -> DataContract:
+    def from_json(
+        cls,
+        path: str | Path,
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load CCM or ODCS JSON from a file path (format auto-detected)."""
-        with Path(path).open(encoding="utf-8") as f:
+        path = resolve_contract_path(path, policy)
+        with path.open(encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
             msg = "Contract JSON must contain an object"
             raise ValueError(msg)
-        return cls.from_dict(data)
+        return cls.from_dict(data, policy=policy)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> DataContract:
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load a contract from a mapping (CCM or ODCS, auto-detected)."""
         if is_odcs_document(data):
-            return cls.from_odcs_dict(data)
-        return cls.from_ccm(CanonicalContract.model_validate(data))
+            return cls.from_odcs_dict(data, policy=policy)
+        enforce_document_bounds(data, policy, format_name="ccm")
+        ccm = CanonicalContract.model_validate(data)
+        validate_extensions(ccm.extensions)
+        _validate_field_tree_extensions(ccm.contract_schema.fields)
+        return cls(ccm, source_format="ccm")
 
     @classmethod
-    def from_odcs(cls, path: str | Path) -> DataContract:
+    def from_odcs(
+        cls,
+        path: str | Path,
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load an ODCS document from a YAML or JSON file path."""
-        path = Path(path)
+        path = resolve_contract_path(path, policy)
         with path.open(encoding="utf-8") as f:
             data = json.load(f) if path.suffix.lower() == ".json" else yaml.safe_load(f)
         if not isinstance(data, dict):
             msg = "ODCS document must be a mapping"
             raise ValueError(msg)
-        return cls.from_odcs_dict(data)
+        return cls.from_odcs_dict(data, policy=policy)
 
     @classmethod
-    def from_odcs_dict(cls, data: dict[str, Any]) -> DataContract:
+    def from_odcs_dict(
+        cls,
+        data: dict[str, Any],
+        *,
+        policy: LoadingPolicy | None = None,
+    ) -> DataContract:
         """Load an ODCS document from a dict.
 
         Populates ``import_warnings`` when lossy fields are detected during import.
         """
+        api_version = normalize_odcs_api_version(
+            data.get("apiVersion") if isinstance(data.get("apiVersion"), str) else None
+        )
+        enforce_document_bounds(
+            data,
+            policy,
+            format_name="odcs",
+            odcs_api_version=api_version,
+        )
         warnings: list[ValidationWarningDetail] = []
         owner = data.get("owner")
         if isinstance(owner, dict) and owner.get("contact"):
@@ -118,17 +188,21 @@ class DataContract:
                     ),
                 )
             )
-        return cls(import_odcs(data), import_warnings=warnings)
+        return cls(
+            import_odcs(data),
+            import_warnings=warnings,
+            source_format="odcs",
+        )
 
     @classmethod
     def from_pydantic(cls, model: type[BaseModel], *, name: str | None = None) -> DataContract:
         """Build a contract from a Pydantic model class (version defaults to ``1.0.0``)."""
-        return cls.from_ccm(contract_from_pydantic(model, name=name))
+        return cls(contract_from_pydantic(model, name=name), source_format="pydantic")
 
     @classmethod
     def from_ccm(cls, ccm: CanonicalContract) -> DataContract:
         """Wrap an existing :class:`~contractmodel.core.ccm.CanonicalContract`."""
-        return cls(ccm)
+        return cls(ccm, source_format="ccm")
 
     @property
     def ccm(self) -> CanonicalContract:
@@ -139,6 +213,11 @@ class DataContract:
     def import_warnings(self) -> list[ValidationWarningDetail]:
         """Warnings from lossy ODCS import (empty for native CCM loads)."""
         return self._import_warnings
+
+    @property
+    def source_format(self) -> str | None:
+        """Loader-recorded source format (``ccm``, ``odcs``, ``pydantic``, …)."""
+        return self._source_format
 
     @property
     def contract_id(self) -> str:
@@ -174,6 +253,10 @@ class DataContract:
     def fields(self) -> list[ContractField]:
         """Top-level schema fields (shortcut for ``schema.fields``)."""
         return self._ccm.contract_schema.fields
+
+    def describe(self) -> ContractDescriptor:
+        """Return an immutable descriptor for integrator introspection."""
+        return describe_contract(self)
 
     def to_pydantic(
         self,

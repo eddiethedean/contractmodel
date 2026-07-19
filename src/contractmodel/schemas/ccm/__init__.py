@@ -1,0 +1,1 @@
+"""CCM wire schema packages."""

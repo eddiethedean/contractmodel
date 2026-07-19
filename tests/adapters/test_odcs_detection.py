@@ -13,7 +13,17 @@ from contractmodel.adapters.odcs import is_odcs_document
 @pytest.mark.parametrize(
     ("data", "expected"),
     [
-        ({"format": "odcs", "contract_id": "x", "name": "X", "version": "1"}, True),
+        ({"format": "odcs", "contract_id": "x", "name": "X", "version": "1"}, False),
+        (
+            {
+                "format": "odcs",
+                "id": "x",
+                "name": "X",
+                "version": "1",
+                "schema": [],
+            },
+            True,
+        ),
         (
             {
                 "apiVersion": "v3.0.0",

@@ -1,26 +1,46 @@
 {
   "project": "ContractModel",
-  "purpose": "Cursor-ready implementation blueprint",
-  "documents": [
-    ".cursor/rules.md",
-    "CURSOR_IMPLEMENTATION_PROMPT.md",
-    "README.md",
-    "docs/architecture/01-system-overview.md",
-    "docs/architecture/02-canonical-contract-model.md",
-    "docs/roadmap/01-implementation-roadmap.md",
-    "docs/roadmap/02-github-epics-and-issues.md",
-    "docs/specifications/01-public-api.md",
-    "docs/specifications/02-odcs-pydantic-mapping.md",
-    "docs/specifications/03-validation-engine.md",
-    "docs/specifications/04-diff-engine.md",
-    "docs/specifications/05-cli-specification.md",
-    "docs/specifications/06-plugin-sdk.md",
-    "docs/specifications/07-semantic-contracts.md",
-    "docs/specifications/08-contracthub-api.md",
-    "docs/specifications/09-testing-strategy.md",
-    "docs/specifications/10-repository-layout.md",
-    "examples/customer_events.ccm.yaml",
-    "examples/customer_events.odcs.yaml",
-    "pyproject.toml"
-  ]
+  "purpose": "Document index for contributors and Cursor-assisted work",
+  "active_plan": "ROADMAP.md",
+  "documents": {
+    "active": [
+      "ROADMAP.md",
+      "docs/CONTRACTMODEL_UPGRADE_PLAN.md",
+      "STABILITY.md",
+      "SECURITY.md",
+      "CHANGELOG.md",
+      "README.md",
+      "CONTRIBUTING.md",
+      "docs/roadmap/03-data-contract-formats.md"
+    ],
+    "architecture": [
+      "docs/architecture/01-system-overview.md",
+      "docs/architecture/02-canonical-contract-model.md"
+    ],
+    "historical": [
+      "docs/roadmap/01-implementation-roadmap.md",
+      "docs/roadmap/02-github-epics-and-issues.md"
+    ],
+    "specifications": [
+      "docs/specifications/01-public-api.md",
+      "docs/specifications/02-odcs-pydantic-mapping.md",
+      "docs/specifications/03-validation-engine.md",
+      "docs/specifications/04-diff-engine.md",
+      "docs/specifications/05-cli-specification.md",
+      "docs/specifications/06-plugin-sdk.md",
+      "docs/specifications/07-semantic-contracts.md",
+      "docs/specifications/08-contracthub-api.md",
+      "docs/specifications/09-testing-strategy.md",
+      "docs/specifications/10-repository-layout.md"
+    ],
+    "tooling": [
+      ".cursor/rules.md",
+      "docs/internal/CURSOR_IMPLEMENTATION_PROMPT.md",
+      "pyproject.toml"
+    ],
+    "examples": [
+      "examples/customer_events.ccm.yaml",
+      "examples/customer_events.odcs.yaml"
+    ]
+  }
 }

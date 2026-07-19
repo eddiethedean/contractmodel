@@ -7,7 +7,6 @@ edit_uri: edit/main/docs/
 exclude_docs: |
   internal/
   specifications/
-  roadmap/02-github-epics-and-issues.md
 
 theme:
   name: material
@@ -42,8 +41,11 @@ nav:
       - System overview: architecture/01-system-overview.md
       - Canonical Contract Model: architecture/02-canonical-contract-model.md
   - Roadmap:
-      - Implementation: roadmap/01-implementation-roadmap.md
+      - Release plan: ROADMAP.md
+      - Upgrade plan: CONTRACTMODEL_UPGRADE_PLAN.md
+      - Bootstrap (historical): roadmap/01-implementation-roadmap.md
       - Data contract formats: roadmap/03-data-contract-formats.md
+      - GitHub epics: roadmap/02-github-epics-and-issues.md
 
 markdown_extensions:
   - admonition
