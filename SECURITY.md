@@ -13,7 +13,7 @@ Report security issues privately to the repository maintainers via GitHub Securi
 ## Contract and data files
 
 - Contract YAML is loaded with `yaml.safe_load` (no arbitrary object deserialization).
-- Validation reads entire data files (JSON, CSV, Parquet) into memory. For untrusted uploads, enforce size limits in your application layer. Recommended starting point: **≤ 100 MB per file** and **≤ 1 million rows** per validation run on 0.1.x.
+- Validation reads entire data files (JSON, CSV, Parquet) into memory. For untrusted uploads, enforce size limits in your application layer. Recommended starting point: **≤ 100 MB per file** and **≤ 1 million rows** per validation run on 0.2.x.
 - Optional `max_bytes` / `max_rows` on validation entry points help bound work. **0.2** adds a public bounded loading policy so consumers need not import private `contractmodel.validation.limits` modules. See [ROADMAP.md](ROADMAP.md).
 
 ## Registry publish
@@ -36,4 +36,4 @@ Report security issues privately to the repository maintainers via GitHub Securi
 
 ## Supported versions
 
-Security fixes are applied to the latest **0.1.x** release. Upgrade to the newest patch when available.
+Security fixes are applied to the latest **0.2.x** release. Upgrade to the newest patch when available.

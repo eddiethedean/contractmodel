@@ -16,11 +16,18 @@ SUPPORTED_PYDANTIC = ">=2.7,<3"
 
 
 def normalize_odcs_api_version(value: str | None) -> str | None:
-    """Return a normalized ODCS apiVersion or None if absent."""
+    """Return a normalized ODCS apiVersion or None if absent.
+
+    Accepts ``v3.1.0`` or bare ``3.1.0`` (normalized with a ``v`` prefix).
+    """
     if value is None:
         return None
     text = str(value).strip()
-    return text or None
+    if not text:
+        return None
+    if text[0].isdigit():
+        text = f"v{text}"
+    return text
 
 
 def is_supported_odcs_version(value: str | None) -> bool:

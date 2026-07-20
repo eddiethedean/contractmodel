@@ -117,10 +117,10 @@ def fetch_contract(
         raise RegistryError(f"Failed to fetch contract: {exc}") from exc
 
     try:
-        if "schema" in data and isinstance(data["schema"], list):
-            from contractmodel.adapters.odcs import import_odcs
-            from contractmodel.adapters.odcs_conformance import validate_odcs_document
+        from contractmodel.adapters.odcs import import_odcs, is_odcs_document
+        from contractmodel.adapters.odcs_conformance import validate_odcs_document
 
+        if is_odcs_document(data):
             validate_odcs_document(data)
             return import_odcs(data)
         return CanonicalContract.model_validate(data)

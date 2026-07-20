@@ -62,6 +62,38 @@ def test_from_odcs_dict_with_contact_warning() -> None:
         "name": "Warn",
         "version": "1.0.0",
         "status": "draft",
+        "team": {
+            "name": "platform",
+            "members": [
+                {
+                    "username": "alice",
+                    "name": "Alice",
+                    "role": "owner",
+                    "dateIn": "2024-01-01",
+                }
+            ],
+        },
+        "support": [{"channel": "email", "url": "https://example.com/help"}],
+        "schema": [
+            {
+                "name": "row",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string", "required": True}],
+            }
+        ],
+    }
+    contract = DataContract.from_odcs_dict(data)
+    assert any(w.code == "ODCS_LOSSY_IMPORT" for w in contract.import_warnings)
+
+
+def test_from_odcs_dict_standard_team_support_is_not_lossy() -> None:
+    data = {
+        "apiVersion": "v3.1.0",
+        "kind": "DataContract",
+        "id": "ok",
+        "name": "Ok",
+        "version": "1.0.0",
+        "status": "draft",
         "team": {"name": "platform"},
         "support": [{"channel": "email", "url": "mailto:a@example.com"}],
         "schema": [
@@ -73,7 +105,9 @@ def test_from_odcs_dict_with_contact_warning() -> None:
         ],
     }
     contract = DataContract.from_odcs_dict(data)
-    assert any(w.code == "ODCS_LOSSY_IMPORT" for w in contract.import_warnings)
+    assert contract.import_warnings == []
+    assert contract.ccm.ownership is not None
+    assert contract.ccm.ownership.team == "platform"
 
 
 def test_from_dict_ccm_and_odcs() -> None:

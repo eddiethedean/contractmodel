@@ -38,6 +38,7 @@ from contractmodel import (
     ContractPluginError,
     OptionalDependencyError,
     OdcsImportError,
+    OdcsValidationError,
     RegistryError,
     examples,
     __version__,
@@ -104,13 +105,14 @@ Optional `max_bytes` and `max_rows` guard validation entry points against oversi
 
 | Method | Description |
 |--------|-------------|
-| `diff(other, mode=BACKWARD)` | Compare self (old) to other (new) |
-| `has_breaking_changes(other, mode=BACKWARD)` | Boolean shortcut |
+| `diff(other, mode=BACKWARD)` | CCM compatibility compare (self = old, other = new) |
+| `diff_odcs(other)` | ODCS-native compatibility via pyodcs (`hasBreaking`, `changes`) |
+| `has_breaking_changes(other, mode=BACKWARD)` | Boolean shortcut for CCM `diff` |
 | `is_breaking_change(other)` | Deprecated alias for `has_breaking_changes` |
 | `to_pydantic(class_name=None, mode=STRICT)` | Generate `ContractModel` subclass (shared cache with validation) |
 | `to_yaml(path=None)` / `to_json(path=None)` | Serialize CCM |
-| `save(path, format=auto)` | Write CCM or ODCS to disk |
-| `to_odcs()` | ODCS dict |
+| `save(path, format=auto)` | Write CCM or ODCS (`*.odcs.yaml` selects ODCS in auto mode) |
+| `to_odcs()` | ODCS dict (pyodcs-validated) |
 | `to_json_schema()` | JSON Schema dict |
 | `to_openapi()` | Minimal OpenAPI 3.1 document |
 | `to_markdown()` | Human-readable markdown |

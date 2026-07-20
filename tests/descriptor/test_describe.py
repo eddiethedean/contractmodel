@@ -43,8 +43,17 @@ def test_data_contract_describe_maps_lossy_import() -> None:
         "name": "Events",
         "version": "1.0.0",
         "status": "draft",
-        "team": {"name": "platform"},
-        "support": [{"channel": "email", "url": "mailto:a@example.com"}],
+        "team": {
+            "name": "platform",
+            "members": [
+                {
+                    "username": "alice",
+                    "role": "owner",
+                    "dateIn": "2024-01-01",
+                }
+            ],
+        },
+        "support": [{"channel": "email", "url": "https://example.com/help"}],
         "schema": [
             {
                 "name": "events",
@@ -58,3 +67,27 @@ def test_data_contract_describe_maps_lossy_import() -> None:
     assert descriptor.fidelity.status == FidelityStatus.LOSSY
     assert any(f.code == "ODCS_LOSSY_IMPORT" for f in descriptor.fidelity.findings)
     assert descriptor.fingerprint == fingerprint_contract(contract.ccm)
+
+
+def test_data_contract_describe_standard_odcs_is_not_lossy() -> None:
+    data = {
+        "apiVersion": "v3.1.0",
+        "kind": "DataContract",
+        "id": "events",
+        "name": "Events",
+        "version": "1.0.0",
+        "status": "draft",
+        "team": {"name": "platform"},
+        "support": [{"channel": "email", "url": "mailto:a@example.com"}],
+        "schema": [
+            {
+                "name": "events",
+                "logicalType": "object",
+                "properties": [{"name": "id", "logicalType": "string", "required": True}],
+            }
+        ],
+    }
+    contract = DataContract.from_odcs_dict(data)
+    descriptor = contract.describe()
+    assert descriptor.fidelity.status != FidelityStatus.LOSSY
+    assert not any(f.code == "ODCS_LOSSY_IMPORT" for f in descriptor.fidelity.findings)

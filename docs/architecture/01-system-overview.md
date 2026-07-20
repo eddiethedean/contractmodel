@@ -12,7 +12,7 @@ plugins own **how** a check runs on a backend. See [ROADMAP.md](../ROADMAP.md).
 
 ```text
 External Contract Formats
-  Shipped (0.1.x):
+  Shipped (0.2.x):
     CCM (native YAML/JSON) · ODCS · Pydantic
     JSON Schema / OpenAPI / Markdown export
     RDF / SHACL / OWL export (semantic extra)
@@ -55,7 +55,7 @@ Canonical Contract Model
 - Absorbing SQL, Spark, scheduling, or pipeline orchestration (those stay in
   consumers and execution plugins).
 
-## Current release (0.1.x)
+## Current release (0.2.x)
 
 - Stable Python API (`DataContract` facade).
 - ODCS import/export.

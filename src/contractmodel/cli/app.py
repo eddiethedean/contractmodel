@@ -164,6 +164,11 @@ def diff(
     new_path: Path = typer.Argument(..., help="New contract path"),
     mode: CompatibilityMode = typer.Option(CompatibilityMode.BACKWARD, "--mode"),
     output: OutputFormat = typer.Option(OutputFormat.TEXT, "--output"),
+    odcs: bool = typer.Option(
+        False,
+        "--odcs",
+        help="Use pyodcs ODCS-native compatibility instead of CCM diff",
+    ),
 ) -> None:
     """Diff two contract versions."""
     try:
@@ -172,6 +177,20 @@ def diff(
     except Exception as exc:
         typer.echo(f"Invalid contract: {exc}", err=True)
         raise typer.Exit(code=2) from exc
+
+    if odcs:
+        report = old_contract.diff_odcs(new_contract)
+        if output == OutputFormat.JSON:
+            typer.echo(json.dumps(report, indent=2))
+        else:
+            breaking = bool(report.get("hasBreaking"))
+            typer.echo(f"Breaking: {breaking}")
+            for change in report.get("changes", []):
+                if isinstance(change, dict):
+                    kind = change.get("kind", "change")
+                    message = change.get("message", "")
+                    typer.echo(f"[{kind}] {message}")
+        raise typer.Exit(code=1 if report.get("hasBreaking") else 0)
 
     result = old_contract.diff(new_contract, mode=mode)
 
@@ -337,7 +356,13 @@ def publish(
 @app.command()
 def doctor() -> None:
     """Check environment and optional dependencies."""
+    import pyodcs
+
+    import contractmodel
+
     typer.echo(f"Python: {sys.version.split()[0]}")
+    typer.echo(f"contractmodel: {contractmodel.__version__}")
+    typer.echo(f"pyodcs: {pyodcs.__version__} (ODCS {pyodcs.UPSTREAM_SPEC_VERSION})")
     for extra, module in [
         ("pandas", "pandas"),
         ("polars", "polars"),
@@ -365,6 +390,24 @@ def _render_pydantic_model_source(model: type[BaseModel]) -> str:
     """Render an importable Python module for a generated model."""
     from typing import get_args, get_origin
 
+    nested_models: dict[str, type[BaseModel]] = {}
+
+    def _collect_nested(annotation_obj: object) -> None:
+        origin = get_origin(annotation_obj)
+        if origin is list or origin is dict:
+            for arg in get_args(annotation_obj):
+                _collect_nested(arg)
+            return
+        if isinstance(annotation_obj, type) and issubclass(annotation_obj, BaseModel):
+            if annotation_obj is model or annotation_obj.__name__ in nested_models:
+                return
+            nested_models[annotation_obj.__name__] = annotation_obj
+            for nested_field in annotation_obj.model_fields.values():
+                _collect_nested(nested_field.annotation)
+
+    for field in model.model_fields.values():
+        _collect_nested(field.annotation)
+
     lines = [
         "from __future__ import annotations",
         "",
@@ -373,26 +416,7 @@ def _render_pydantic_model_source(model: type[BaseModel]) -> str:
         "from contractmodel import ContractModel",
         "from pydantic import Field",
         "",
-        f"class {model.__name__}(ContractModel):",
     ]
-
-    identity_attrs = [
-        ("__contract_id__", getattr(model, "__contract_id__", None)),
-        ("__contract_version__", getattr(model, "__contract_version__", None)),
-        ("__contract_name__", getattr(model, "__contract_name__", None)),
-        ("__contract_fingerprint__", getattr(model, "__contract_fingerprint__", None)),
-        ("__ccm_wire_version__", getattr(model, "__ccm_wire_version__", None)),
-        ("__contract_kind__", getattr(model, "__contract_kind__", None)),
-        ("__source_format__", getattr(model, "__source_format__", None)),
-        ("__source_version__", getattr(model, "__source_version__", None)),
-    ]
-    has_identity = False
-    for attr_name, attr_value in identity_attrs:
-        if attr_value is not None:
-            lines.append(f"    {attr_name}: ClassVar[str | None] = {attr_value!r}")
-            has_identity = True
-    if has_identity:
-        lines.append("")
 
     def _annotation_name(annotation_obj: object) -> str:
         origin = get_origin(annotation_obj)
@@ -412,18 +436,45 @@ def _render_pydantic_model_source(model: type[BaseModel]) -> str:
             return name
         return str(annotation_obj).replace("typing.", "")
 
-    if not model.model_fields:
-        if not has_identity:
-            lines.append("    pass")
-    else:
-        for name, field in model.model_fields.items():
-            annotation = _annotation_name(field.annotation)
-            if field.is_required():
-                lines.append(f"    {name}: {annotation}")
-            else:
-                default = field.default if field.default is not None else None
-                lines.append(f"    {name}: {annotation} | None = {default!r}")
-    lines.append("")
+    def _render_class(cls: type[BaseModel], *, base: str) -> list[str]:
+        class_lines = [f"class {cls.__name__}({base}):"]
+        identity_attrs = [
+            ("__contract_id__", getattr(cls, "__contract_id__", None)),
+            ("__contract_version__", getattr(cls, "__contract_version__", None)),
+            ("__contract_name__", getattr(cls, "__contract_name__", None)),
+            ("__contract_fingerprint__", getattr(cls, "__contract_fingerprint__", None)),
+            ("__ccm_wire_version__", getattr(cls, "__ccm_wire_version__", None)),
+            ("__contract_kind__", getattr(cls, "__contract_kind__", None)),
+            ("__source_format__", getattr(cls, "__source_format__", None)),
+            ("__source_version__", getattr(cls, "__source_version__", None)),
+        ]
+        has_identity = False
+        for attr_name, attr_value in identity_attrs:
+            if attr_value is not None:
+                class_lines.append(f"    {attr_name}: ClassVar[str | None] = {attr_value!r}")
+                has_identity = True
+        if has_identity:
+            class_lines.append("")
+
+        if not cls.model_fields:
+            if not has_identity:
+                class_lines.append("    pass")
+        else:
+            for name, field in cls.model_fields.items():
+                annotation = _annotation_name(field.annotation)
+                if field.is_required():
+                    class_lines.append(f"    {name}: {annotation}")
+                else:
+                    default = field.default if field.default is not None else None
+                    class_lines.append(f"    {name}: {annotation} | None = {default!r}")
+        class_lines.append("")
+        return class_lines
+
+    for nested in nested_models.values():
+        lines.extend(_render_class(nested, base="ContractModel"))
+        lines.append("")
+
+    lines.extend(_render_class(model, base="ContractModel"))
     return "\n".join(lines)
 
 

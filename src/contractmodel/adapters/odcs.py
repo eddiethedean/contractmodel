@@ -52,7 +52,6 @@ _ODCS_FIELD_KEYS = frozenset(
         "maxLength",
         "pattern",
         "unique",
-        "primaryKey",
         "min_value",
         "max_value",
         "min_length",
@@ -61,9 +60,6 @@ _ODCS_FIELD_KEYS = frozenset(
         "items",
         "children",
         "customProperties",
-        "physicalName",
-        "physicalType",
-        "quality",
     }
 )
 
@@ -116,10 +112,14 @@ _STRING_FORMAT_TYPES = {
     "uuid": LogicalType.UUID,
     "uri": LogicalType.URI,
     "email": LogicalType.EMAIL,
+    "binary": LogicalType.BINARY,
 }
 
 _EXTENSION_SCHEMA_NAME = "odcsSchemaName"
 _EXTENSION_SCHEMA_PHYSICAL = "odcsSchemaPhysicalName"
+_EXTENSION_TEAM = "odcsTeam"
+_EXTENSION_DESCRIPTION = "odcsDescription"
+_CCM_TYPE_PROPERTY = "ccmLogicalType"
 
 _ODCS_TOP_LEVEL_PASSTHROUGH = frozenset(
     {
@@ -210,6 +210,10 @@ def import_odcs(data: dict[str, Any]) -> CanonicalContract:
         extensions.setdefault("apiVersion", api_version)
     if "kind" in data:
         extensions.setdefault("kind", data["kind"])
+    if isinstance(data.get("team"), dict):
+        extensions.setdefault(_EXTENSION_TEAM, data["team"])
+    if isinstance(data.get("description"), dict):
+        extensions.setdefault(_EXTENSION_DESCRIPTION, data["description"])
 
     schema, schema_extensions = _import_schema(data.get("schema", []))
     extensions.update(schema_extensions)
@@ -237,6 +241,41 @@ def import_odcs(data: dict[str, Any]) -> CanonicalContract:
     )
 
 
+def collect_odcs_import_warnings(data: dict[str, Any]) -> list[str]:
+    """Return human-readable lossy-import messages for an ODCS document."""
+    messages: list[str] = []
+    team = data.get("team")
+    if isinstance(team, list):
+        messages.append("ODCS team member list mapped to ownership contacts")
+    elif isinstance(team, dict) and isinstance(team.get("members"), list) and team["members"]:
+        messages.append("ODCS team.members preserved in extensions; contacts also mapped")
+
+    support = data.get("support")
+    if isinstance(support, list):
+        for item in support:
+            if not isinstance(item, dict):
+                messages.append("ODCS support entries that are not mailto were skipped")
+                break
+            url = item.get("url")
+            if not (isinstance(url, str) and url.startswith("mailto:")):
+                messages.append("ODCS support entries that are not mailto were skipped")
+                break
+
+    description = data.get("description")
+    if isinstance(description, dict):
+        parts = [
+            key
+            for key in ("purpose", "usage", "limitations")
+            if isinstance(description.get(key), str) and str(description.get(key)).strip()
+        ]
+        if len(parts) > 1:
+            messages.append(
+                "ODCS description keeps purpose/usage/limitations in extensions; "
+                "CCM description uses the first non-empty part"
+            )
+    return messages
+
+
 def export_odcs(contract: CanonicalContract, *, validate: bool = True) -> dict[str, Any]:
     """Convert a CanonicalContract into a pyodcs-valid ODCS document dict."""
     result: dict[str, Any] = {}
@@ -245,14 +284,17 @@ def export_odcs(contract: CanonicalContract, *, validate: bool = True) -> dict[s
     if isinstance(existing_custom, list):
         extra_custom.extend(item for item in existing_custom if isinstance(item, dict))
 
+    skip_extension_keys = {
+        _EXTENSION_SCHEMA_NAME,
+        _EXTENSION_SCHEMA_PHYSICAL,
+        _EXTENSION_TEAM,
+        _EXTENSION_DESCRIPTION,
+        "format",
+        "owner",
+        "customProperties",
+    }
     for key, value in contract.extensions.items():
-        if key in {
-            _EXTENSION_SCHEMA_NAME,
-            _EXTENSION_SCHEMA_PHYSICAL,
-            "format",
-            "owner",
-            "customProperties",
-        }:
+        if key in skip_extension_keys:
             continue
         if key in _ODCS_TOP_LEVEL_PASSTHROUGH:
             result[key] = value
@@ -266,12 +308,22 @@ def export_odcs(contract: CanonicalContract, *, validate: bool = True) -> dict[s
     result["version"] = contract.version
     result["status"] = contract.status.value
 
-    if contract.description is not None:
+    stored_description = contract.extensions.get(_EXTENSION_DESCRIPTION)
+    if isinstance(stored_description, dict):
+        result["description"] = stored_description
+    elif contract.description is not None:
         result["description"] = {"purpose": contract.description}
 
-    team = _export_team(contract.ownership)
-    if team is not None:
-        result["team"] = team
+    stored_team = contract.extensions.get(_EXTENSION_TEAM)
+    if isinstance(stored_team, dict):
+        team_doc = dict(stored_team)
+        if contract.ownership is not None and contract.ownership.team:
+            team_doc["name"] = contract.ownership.team
+        result["team"] = team_doc
+    else:
+        exported_team = _export_team(contract.ownership)
+        if exported_team is not None:
+            result["team"] = exported_team
 
     support = _export_support(contract.ownership)
     if support is not None:
@@ -284,10 +336,16 @@ def export_odcs(contract: CanonicalContract, *, validate: bool = True) -> dict[s
         contract.extensions.get(_EXTENSION_SCHEMA_NAME)
         or contract.contract_id.replace("-", "_")
     )
+    properties = [_export_field(field) for field in contract.contract_schema.fields]
+    for field in contract.contract_schema.fields:
+        if field.name in contract.contract_schema.primary_key:
+            for prop in properties:
+                if prop.get("name") == field.name:
+                    prop["primaryKey"] = True
     schema_object: dict[str, Any] = {
         "name": schema_name,
         "logicalType": "object",
-        "properties": [_export_field(field) for field in contract.contract_schema.fields],
+        "properties": properties,
     }
     physical = contract.extensions.get(_EXTENSION_SCHEMA_PHYSICAL)
     if isinstance(physical, str) and physical:
@@ -406,35 +464,39 @@ def _import_schema(schema_data: Any) -> tuple[ContractSchema, dict[str, Any]]:
 
     fields: list[ContractField] = []
     schema_extensions: dict[str, Any] = {}
+    primary_key: list[str] = []
 
+    dict_entries = [item for item in schema_data if isinstance(item, dict)]
     object_elements = [
         item
-        for item in schema_data
-        if isinstance(item, dict) and str(item.get("logicalType", "")).lower() == "object"
+        for item in dict_entries
+        if str(item.get("logicalType", "")).lower() == "object"
+        and isinstance(item.get("properties"), list)
     ]
-    if object_elements and all(
-        isinstance(item.get("properties"), list) for item in object_elements
-    ):
-        if len(object_elements) == 1:
-            element = object_elements[0]
-            name = element.get("name")
-            if isinstance(name, str) and name:
-                schema_extensions[_EXTENSION_SCHEMA_NAME] = name
-            physical = element.get("physicalName")
-            if isinstance(physical, str) and physical:
-                schema_extensions[_EXTENSION_SCHEMA_PHYSICAL] = physical
-            for prop in element.get("properties") or []:
-                if isinstance(prop, dict):
-                    fields.append(_import_field(prop))
-        else:
-            for element in object_elements:
-                fields.append(_import_field(element))
-        return ContractSchema(fields=fields), schema_extensions
 
-    for item in schema_data:
-        if isinstance(item, dict):
-            fields.append(_import_field(item))
-    return ContractSchema(fields=fields), schema_extensions
+    # Flatten only when the document is a single object schema element.
+    if len(object_elements) == 1 and len(dict_entries) == 1:
+        element = object_elements[0]
+        name = element.get("name")
+        if isinstance(name, str) and name:
+            schema_extensions[_EXTENSION_SCHEMA_NAME] = name
+        physical = element.get("physicalName")
+        if isinstance(physical, str) and physical:
+            schema_extensions[_EXTENSION_SCHEMA_PHYSICAL] = physical
+        for prop in element.get("properties") or []:
+            if isinstance(prop, dict):
+                field = _import_field(prop)
+                fields.append(field)
+                if prop.get("primaryKey") is True:
+                    primary_key.append(field.name)
+    else:
+        for item in dict_entries:
+            field = _import_field(item)
+            fields.append(field)
+            if item.get("primaryKey") is True:
+                primary_key.append(field.name)
+
+    return ContractSchema(fields=fields, primary_key=primary_key), schema_extensions
 
 
 def _import_children(field_data: dict[str, Any]) -> list[ContractField]:
@@ -475,7 +537,7 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
     custom = _custom_property_map(field_data)
     extensions = {k: v for k, v in field_data.items() if k not in _ODCS_FIELD_KEYS}
     for key, value in custom.items():
-        if key not in {"enum", "nullable", "default", "aliases"}:
+        if key not in {"enum", "nullable", "default", "aliases", _CCM_TYPE_PROPERTY}:
             extensions.setdefault(key, value)
     validate_extensions(extensions, path=f"fields.{name}.extensions")
 
@@ -498,6 +560,14 @@ def _import_field(field_data: dict[str, Any]) -> ContractField:
     elif str(logical_type_raw).lower() == LogicalType.ENUM.value:
         msg = f"ODCS field '{name}' enum type requires enum values"
         raise OdcsImportError(msg)
+    elif custom.get(_CCM_TYPE_PROPERTY) in {
+        LogicalType.MAP.value,
+        LogicalType.DECIMAL.value,
+        LogicalType.DURATION.value,
+        LogicalType.ANY.value,
+    }:
+        logical_type = LogicalType(str(custom[_CCM_TYPE_PROPERTY]))
+        constraints = _import_constraints(field_data, options)
     else:
         logical_type = _map_import_logical_type(str(logical_type_raw), options)
         constraints = _import_constraints(field_data, options)
@@ -602,6 +672,14 @@ def _export_field(field: ContractField) -> dict[str, Any]:
     elif field.logical_type == LogicalType.BINARY:
         result["logicalType"] = "string"
         options["format"] = "binary"
+    elif field.logical_type == LogicalType.MAP:
+        result["logicalType"] = "object"
+        custom_properties.append({"property": _CCM_TYPE_PROPERTY, "value": "map"})
+    elif field.logical_type in {LogicalType.DECIMAL, LogicalType.DURATION, LogicalType.ANY}:
+        result["logicalType"] = _CCM_TO_ODCS_TYPE[field.logical_type]
+        custom_properties.append(
+            {"property": _CCM_TYPE_PROPERTY, "value": field.logical_type.value}
+        )
     else:
         result["logicalType"] = odcs_type
 
@@ -637,15 +715,16 @@ def _export_field(field: ContractField) -> dict[str, Any]:
     if field.children:
         if field.logical_type == LogicalType.OBJECT:
             result["properties"] = [_export_field(child) for child in field.children]
-        elif field.logical_type in (LogicalType.ARRAY, LogicalType.MAP):
-            # ODCS expects a single SchemaProperty for items, not a list.
+        elif field.logical_type == LogicalType.ARRAY:
             if field.children:
                 result["items"] = _export_field(field.children[0])
+        elif field.logical_type == LogicalType.MAP:
+            result["properties"] = [_export_field(child) for child in field.children]
         else:
             result["properties"] = [_export_field(child) for child in field.children]
 
     for key, value in field.extensions.items():
-        if key in _ODCS_FIELD_RESERVED:
+        if key in _ODCS_FIELD_RESERVED or key == _CCM_TYPE_PROPERTY:
             continue
         if key in _ODCS_FIELD_PASSTHROUGH:
             result[key] = value

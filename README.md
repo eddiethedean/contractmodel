@@ -237,7 +237,7 @@ adapter/fidelity framework before new format adapters. See [ROADMAP.md](ROADMAP.
 
 ## Performance
 
-Validation loads full datasets into memory. For 0.1.x, keep files under **~100 MB** and **~1 million rows** unless you benchmark larger workloads. Call `to_pydantic()` once per contract and reuse the model class.
+Validation loads full datasets into memory. For 0.2.x, keep files under **~100 MB** and **~1 million rows** unless you benchmark larger workloads. Call `to_pydantic()` once per contract and reuse the model class.
 
 Optional `max_bytes` and `max_rows` on validation entry points guard against oversized payloads. Non-positive limits raise `ValueError`. Bounded streaming and redaction by default are planned for **0.3**.
 

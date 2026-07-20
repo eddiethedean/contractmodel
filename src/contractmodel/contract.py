@@ -10,7 +10,12 @@ from typing import Any, Literal, cast
 import yaml
 from pydantic import BaseModel
 
-from contractmodel.adapters.odcs import export_odcs, import_odcs, is_odcs_document
+from contractmodel.adapters.odcs import (
+    collect_odcs_import_warnings,
+    export_odcs,
+    import_odcs,
+    is_odcs_document,
+)
 from contractmodel.adapters.odcs_conformance import (
     diff_odcs_documents,
     parse_and_validate_odcs_file,
@@ -50,6 +55,12 @@ from contractmodel.validation.limits import (
     validate_limit_params,
 )
 from contractmodel.versions import normalize_odcs_api_version
+
+
+def _looks_like_odcs_path(path: Path) -> bool:
+    """Return True when a path name indicates ODCS YAML (``.odcs``, ``.odcs.yaml``, …)."""
+    name = path.name.lower()
+    return name.endswith(".odcs") or name.endswith(".odcs.yaml") or name.endswith(".odcs.yml")
 
 
 def _validate_field_tree_extensions(
@@ -181,19 +192,10 @@ class DataContract:
         )
         if not _already_validated:
             validate_odcs_document(data)
-        warnings: list[ValidationWarningDetail] = []
-        support = data.get("support")
-        team = data.get("team")
-        if isinstance(support, list) or isinstance(team, dict):
-            warnings.append(
-                ValidationWarningDetail(
-                    code="ODCS_LOSSY_IMPORT",
-                    message=(
-                        "ODCS team/support mapped to ownership; "
-                        "export uses team name and mailto support channels"
-                    ),
-                )
-            )
+        warnings = [
+            ValidationWarningDetail(code="ODCS_LOSSY_IMPORT", message=message)
+            for message in collect_odcs_import_warnings(data)
+        ]
         return cls(
             import_odcs(data),
             import_warnings=warnings,
@@ -544,7 +546,7 @@ class DataContract:
         target = Path(path)
         resolved = format
         if resolved == "auto":
-            resolved = "odcs" if target.suffix.lower() in {".odcs", ".odcs.yaml"} else "ccm"
+            resolved = "odcs" if _looks_like_odcs_path(target) else "ccm"
         if resolved == "odcs":
             content = yaml.safe_dump(self.to_odcs(), sort_keys=False)
             target.write_text(content, encoding="utf-8")

@@ -61,8 +61,20 @@ def validate_odcs_document(data: dict[str, Any]) -> None:
 
 def parse_and_validate_odcs_file(path: str | Path) -> dict[str, Any]:
     """Parse and validate an ODCS file; return the contract dict."""
-    result = pyodcs.parse_file(str(path))
-    report = pyodcs.validate_result(result)
+    try:
+        result = pyodcs.parse_file(str(path))
+        report = pyodcs.validate_result(result)
+    except (TypeError, ValueError, OSError) as exc:
+        raise OdcsValidationError(
+            f"ODCS document failed conformance (parse_file:{path}): {exc}",
+            diagnostics=[
+                {
+                    "id": "odcs:parse-error",
+                    "severity": _ERROR_SEVERITY,
+                    "message": str(exc),
+                }
+            ],
+        ) from exc
     _raise_if_invalid(report, context=f"parse_file:{path}")
     contract = result.get("contract")
     if not isinstance(contract, dict):
@@ -79,8 +91,20 @@ def parse_and_validate_odcs(
     format: str = "yaml",
 ) -> dict[str, Any]:
     """Parse and validate ODCS text; return the contract dict."""
-    result = pyodcs.parse(content, format=format)
-    report = pyodcs.validate_result(result)
+    try:
+        result = pyodcs.parse(content, format=format)
+        report = pyodcs.validate_result(result)
+    except (TypeError, ValueError) as exc:
+        raise OdcsValidationError(
+            f"ODCS document failed conformance (parse:{format}): {exc}",
+            diagnostics=[
+                {
+                    "id": "odcs:parse-error",
+                    "severity": _ERROR_SEVERITY,
+                    "message": str(exc),
+                }
+            ],
+        ) from exc
     _raise_if_invalid(report, context=f"parse:{format}")
     contract = result.get("contract")
     if not isinstance(contract, dict):

@@ -12,7 +12,6 @@ import yaml
 
 from contractmodel.adapters.odcs import is_odcs_document
 from contractmodel.contract import DataContract
-from contractmodel.core.ccm import CanonicalContract
 
 
 def _dev_examples_dir() -> Path:
@@ -130,4 +129,4 @@ def load_example(name: str) -> DataContract:
 
     if is_odcs_document(data):
         return DataContract.from_odcs_dict(data)
-    return DataContract(CanonicalContract.model_validate(data))
+    return DataContract.from_dict(data)

@@ -48,12 +48,30 @@ class LoadingPolicy(BaseModel):
 
 DEFAULT_LOADING_POLICY = LoadingPolicy()
 
+# Darwin (and similar) expose /tmp,/var as convenience symlinks into /private/*.
+# Those are not attacker-controlled path escapes for LoadingPolicy purposes.
+_BENIGN_OS_SYMLINKS = frozenset({"/tmp", "/var", "/etc"})
+
+
+def _is_benign_os_symlink(path: Path) -> bool:
+    """Return True for platform mount aliases such as ``/tmp`` → ``/private/tmp``."""
+    if not path.is_symlink():
+        return False
+    try:
+        posix = path.as_posix()
+        if posix not in _BENIGN_OS_SYMLINKS:
+            return False
+        resolved = path.resolve(strict=False).as_posix()
+    except OSError:
+        return False
+    return resolved.startswith("/private/") and resolved.rstrip("/").endswith(path.name)
+
 
 def _path_has_symlink(path: Path) -> bool:
-    """Return True if ``path`` or any ancestor component is a symlink."""
+    """Return True if ``path`` or any non-benign ancestor component is a symlink."""
     current = path
     while True:
-        if current.is_symlink():
+        if current.is_symlink() and not _is_benign_os_symlink(current):
             return True
         parent = current.parent
         if parent == current:

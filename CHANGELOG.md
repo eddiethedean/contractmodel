@@ -2,18 +2,6 @@
 
 ## Unreleased
 
-### Breaking
-
-- ODCS import requires `apiVersion: v3.1.0` only (drop `v3.0.0` and missing-`apiVersion` legacy acceptance)
-- ODCS documents must conform to the [pyodcs](https://pypi.org/project/pyodcs/) reference validator before CCM mapping
-- ODCS export emits nested object schemas (`schema[].properties`), `description` objects, and `team`/`support` instead of legacy flat fields / `owner`
-
-### Added
-
-- Hard dependency on `pyodcs>=0.9.1,<2` for ODCS document conformance
-- `OdcsValidationError` with structured `diagnostics` from pyodcs
-- `DataContract.diff_odcs` for ODCS-native compatibility (separate from CCM `diff`)
-
 ### Known limitations
 
 Mapped to [ROADMAP.md](ROADMAP.md) releases:
@@ -38,16 +26,21 @@ Mapped to [ROADMAP.md](ROADMAP.md) releases:
 - Add public `LoadingPolicy` for contract document loading (roots, bytes, depth, formats, ODCS versions)
 - Add extension namespace/size budgets (`ExtensionBudgetError`)
 - Support ODCS nested `properties` / `items` ↔ CCM `children`
-- Pin `pydantic>=2.7,<3`; publish supported ODCS versions `v3.0.0` and `v3.1.0` (default export `v3.1.0`)
+- Pin `pydantic>=2.7,<3`; hard-depend on `pyodcs>=0.9.1,<2` for ODCS document conformance
+- Supported ODCS `apiVersion`: **`v3.1.0` only** (default export `v3.1.0`)
+- Add `OdcsValidationError` with structured pyodcs `diagnostics`
+- Add `DataContract.diff_odcs` (and CLI `contract diff --odcs`) for ODCS-native compatibility
 - Classify export targets via `export_stability` (`stable` / `provisional` / `experimental` / `private`)
 
 ### Correctness fixes (pre-release)
 
 - Scope `.gitignore` `/models.py` so `descriptor/models.py` is packaged in wheels
 - Deep-freeze descriptor indexes/constraints; track `DataContract.source_format` for provenance
-- Harden `LoadingPolicy`: content vs encoding gates, nested extension budgets, in-memory `max_bytes`, intermediate symlink blocking, ODCS-only `require_odcs_version`
+- Harden `LoadingPolicy`: content vs encoding gates, nested extension budgets, in-memory `max_bytes`, intermediate symlink blocking (allow Darwin `/tmp`/`/var` aliases), ODCS-only `require_odcs_version`
 - Prefer CCM when `contract_id` is present; canonicalize numeric fingerprint forms; reject non-finite `Decimal`
-- Emit identity ClassVars from CLI `generate`; replace fragile `ccm_json_schema_path` with `ccm_json_schema_text`
+- Emit identity ClassVars from CLI `generate`; emit nested Pydantic classes for object fields
+- `save(format="auto")` recognizes `*.odcs.yaml` / `*.odcs.yml`
+- ODCS fidelity: preserve team members / description objects in extensions; map `primaryKey` and field `physicalName`; restore BINARY/DECIMAL/MAP via format/`ccmLogicalType`; warn only on actual lossy imports
 
 ## 0.1.2 — 2026-06-24
 
