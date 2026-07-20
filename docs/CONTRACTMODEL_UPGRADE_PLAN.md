@@ -4,7 +4,7 @@
 
 Proposed plan for ContractModel 0.2+ and its stable integration with ETLantic.
 
-The public release summary is **[ROADMAP.md](../ROADMAP.md)** at the repository
+The public release summary is **[ROADMAP.md](ROADMAP.md)** at the repository
 root. This document expands findings, ownership boundaries, and acceptance
 criteria.
 
@@ -113,7 +113,7 @@ experimental until they fail closed.
 
 The previous bootstrap roadmap expanded quickly to JSON Schema, OpenAPI, Avro,
 Protobuf, Parquet, dbt, lakehouse, event, and catalog adapters. The active
-[ROADMAP.md](../ROADMAP.md) defers new formats until **0.4**, after a stable
+[ROADMAP.md](ROADMAP.md) defers new formats until **0.4**, after a stable
 adapter/fidelity protocol, canonical type system, and conformance suite.
 
 ### Release assurance needs a 1.0 path

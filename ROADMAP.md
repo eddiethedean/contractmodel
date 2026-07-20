@@ -4,9 +4,9 @@ Proposed path from **0.2.0** to a stable **1.0** data-contract foundation, and i
 integration with ETLantic.
 
 Detailed design notes live in
-[`docs/CONTRACTMODEL_UPGRADE_PLAN.md`](docs/CONTRACTMODEL_UPGRADE_PLAN.md).
+[`docs/CONTRACTMODEL_UPGRADE_PLAN.md`](CONTRACTMODEL_UPGRADE_PLAN.md).
 Format-specific status lives in
-[`docs/roadmap/03-data-contract-formats.md`](docs/roadmap/03-data-contract-formats.md).
+[`docs/roadmap/03-data-contract-formats.md`](roadmap/03-data-contract-formats.md).
 
 ## Product outcome
 
@@ -111,7 +111,7 @@ only documented top-level ContractModel APIs.
 
 New interchange formats (Avro, Protobuf, Parquet schema, dbt, lakehouse, and
 so on) land **after** this framework is in place. See the
-[format catalog](docs/roadmap/03-data-contract-formats.md).
+[format catalog](roadmap/03-data-contract-formats.md).
 
 ### 0.5 — Compatibility and evolution
 
@@ -234,9 +234,9 @@ The projects do not need lockstep versions or release schedules.
 
 | Document | Role |
 |----------|------|
-| [Upgrade plan](docs/CONTRACTMODEL_UPGRADE_PLAN.md) | Full findings, ownership boundary, acceptance criteria |
-| [Format catalog](docs/roadmap/03-data-contract-formats.md) | Per-format status and priority |
-| [Historical phases 0–11](docs/roadmap/01-implementation-roadmap.md) | Completed 0.1.x bootstrap work |
-| [GitHub epics](docs/roadmap/02-github-epics-and-issues.md) | Issue tracking skeleton |
-| [STABILITY.md](STABILITY.md) | API stability tiers |
-| [CHANGELOG.md](CHANGELOG.md) | Released changes |
+| [Upgrade plan](CONTRACTMODEL_UPGRADE_PLAN.md) | Full findings, ownership boundary, acceptance criteria |
+| [Format catalog](roadmap/03-data-contract-formats.md) | Per-format status and priority |
+| [Historical phases 0–11](roadmap/01-implementation-roadmap.md) | Completed 0.1.x bootstrap work |
+| [GitHub epics](roadmap/02-github-epics-and-issues.md) | Issue tracking skeleton |
+| [STABILITY.md](https://github.com/eddiethedean/contractmodel/blob/main/STABILITY.md) | API stability tiers |
+| [CHANGELOG.md](https://github.com/eddiethedean/contractmodel/blob/main/CHANGELOG.md) | Released changes |
