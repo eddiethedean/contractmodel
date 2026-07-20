@@ -1,0 +1,2848 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://eddiethedean.github.io/contractmodel/CONTRACTMODEL_UPGRADE_PLAN/">
+      
+      
+        <link rel="prev" href="../ROADMAP/">
+      
+      
+        <link rel="next" href="../roadmap/01-implementation-roadmap/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Upgrade plan - ContractModel</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#contractmodel-upgrade-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ContractModel" class="md-header__button md-logo" aria-label="ContractModel" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ContractModel
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Upgrade plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eddiethedean/contractmodel" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eddiethedean/contractmodel
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ContractModel" class="md-nav__button md-logo" aria-label="ContractModel" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ContractModel
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eddiethedean/contractmodel" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    eddiethedean/contractmodel
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/cli-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI walkthrough
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/pydantic-roundtrip/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pydantic round-trip
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/diff-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diff workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/ci-sarif/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI with SARIF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/error-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli-library-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/01-system-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/02-canonical-contract-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical Contract Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Roadmap
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ROADMAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrade plan
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrade plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-outcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product outcome
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-strengths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current strengths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-that-should-shape-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Findings that should shape 0.2+
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Findings that should shape 0.2+">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-integration-surface-is-implicit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The integration surface is implicit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canonical-values-are-not-immutable-or-wire-versioned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonical values are not immutable or wire-versioned
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fidelity-is-represented-unevenly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fidelity is represented unevenly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-is-not-yet-a-scalable-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation is not yet a scalable protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-and-pushed-down-checks-need-one-truth-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native and pushed-down checks need one truth model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-and-registry-trust-remain-experimental" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugin and registry trust remain experimental
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adapter-count-was-prioritized-too-early" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapter count was prioritized too early
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release-assurance-needs-a-10-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release assurance needs a 1.0 path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ownership-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ownership boundary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ownership boundary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contractmodel-owns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContractModel owns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etlantic-owns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ETLantic owns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-plugins-own" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution plugins own
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#required-public-integration-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required public integration API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required public integration API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recognition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#immutable-normalized-introspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immutable normalized introspection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generated-model-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated-model identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compatibility-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-specification-and-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation specification and result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-loading-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe loading policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adapter-fidelity-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapter fidelity result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#02-semantic-kernel-and-integration-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.2 — Semantic kernel and integration API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.2 — Semantic kernel and integration API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#03-bounded-validation-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.3 — Bounded validation protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.3 — Bounded validation protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#04-adapter-and-fidelity-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.4 — Adapter and fidelity framework
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.4 — Adapter and fidelity framework">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#05-compatibility-and-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.5 — Compatibility and evolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.5 — Compatibility and evolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#06-trust-plugins-and-registries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.6 — Trust, plugins, and registries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.6 — Trust, plugins, and registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#07-developer-experience-and-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.7 — Developer experience and CLI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7 — Developer experience and CLI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-gate_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#08-performance-and-conformance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.8 — Performance and conformance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8 — Performance and conformance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#09-10-release-candidate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.9 — 1.0 release candidate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-stable-data-contract-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.0 — Stable data-contract foundation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etlantic-adoption-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ETLantic adoption plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ETLantic adoption plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-define-shared-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Define shared fixtures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-run-dual-version-acceptance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Run dual-version acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-replace-duplicated-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Replace duplicated behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-pin-and-support-deliberately" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pin and support deliberately
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-rehearse-10-interoperability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Rehearse 1.0 interoperability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prioritization-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prioritization rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success measures
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/01-implementation-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bootstrap (historical)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/03-data-contract-formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data contract formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/02-github-epics-and-issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub epics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-outcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product outcome
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-strengths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current strengths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-that-should-shape-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Findings that should shape 0.2+
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Findings that should shape 0.2+">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-integration-surface-is-implicit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The integration surface is implicit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canonical-values-are-not-immutable-or-wire-versioned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonical values are not immutable or wire-versioned
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fidelity-is-represented-unevenly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fidelity is represented unevenly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-is-not-yet-a-scalable-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation is not yet a scalable protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-and-pushed-down-checks-need-one-truth-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native and pushed-down checks need one truth model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-and-registry-trust-remain-experimental" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugin and registry trust remain experimental
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adapter-count-was-prioritized-too-early" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapter count was prioritized too early
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release-assurance-needs-a-10-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release assurance needs a 1.0 path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ownership-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ownership boundary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ownership boundary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contractmodel-owns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContractModel owns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etlantic-owns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ETLantic owns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-plugins-own" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution plugins own
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#required-public-integration-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required public integration API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Required public integration API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recognition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recognition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#immutable-normalized-introspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immutable normalized introspection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generated-model-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated-model identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compatibility-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-specification-and-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation specification and result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-loading-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe loading policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adapter-fidelity-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapter fidelity result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#02-semantic-kernel-and-integration-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.2 — Semantic kernel and integration API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.2 — Semantic kernel and integration API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#03-bounded-validation-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.3 — Bounded validation protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.3 — Bounded validation protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#04-adapter-and-fidelity-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.4 — Adapter and fidelity framework
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.4 — Adapter and fidelity framework">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#05-compatibility-and-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.5 — Compatibility and evolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.5 — Compatibility and evolution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#06-trust-plugins-and-registries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.6 — Trust, plugins, and registries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.6 — Trust, plugins, and registries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#07-developer-experience-and-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.7 — Developer experience and CLI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7 — Developer experience and CLI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-gate_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit gate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#08-performance-and-conformance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.8 — Performance and conformance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8 — Performance and conformance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deliver_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliver
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acceptance_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#09-10-release-candidate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.9 — 1.0 release candidate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-stable-data-contract-foundation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.0 — Stable data-contract foundation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etlantic-adoption-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ETLantic adoption plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ETLantic adoption plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-define-shared-fixtures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Define shared fixtures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-run-dual-version-acceptance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Run dual-version acceptance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-replace-duplicated-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Replace duplicated behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-pin-and-support-deliberately" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pin and support deliberately
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-rehearse-10-interoperability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Rehearse 1.0 interoperability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prioritization-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prioritization rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success measures
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="contractmodel-upgrade-plan">ContractModel Upgrade Plan<a class="headerlink" href="#contractmodel-upgrade-plan" title="Permanent link">&para;</a></h1>
+<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<p>Proposed plan for ContractModel 0.2+ and its stable integration with ETLantic.</p>
+<p>The public release summary is <strong><a href="../ROADMAP/">ROADMAP.md</a></strong> at the repository
+root. This document expands findings, ownership boundaries, and acceptance
+criteria.</p>
+<p>This document follows a review of
+<a href="https://github.com/eddiethedean/contractmodel"><code>eddiethedean/contractmodel</code></a>
+at commit <code>12e8505</code> (<code>0.1.2</code>) and ETLantic's current integration. Proposed APIs
+are illustrative; they are not shipped behavior.</p>
+<h2 id="product-outcome">Product outcome<a class="headerlink" href="#product-outcome" title="Permanent link">&para;</a></h2>
+<p>ContractModel should be the best Python-native way to turn a data contract into
+an operational, portable, inspectable interface:</p>
+<div class="highlight"><pre><span></span><code>ODCS or Python authoring
+          ↓
+versioned canonical contract semantics
+          ↓
+introspection • validation • compatibility • fidelity evidence
+          ↓
+pipelines, applications, CI, registries, and engine adapters
+</code></pre></div>
+<p>ContractModel owns what a valid data contract means. ETLantic owns where and
+when that contract is applied across a pipeline. Execution plugins own how a
+required check is realized efficiently on a backend.</p>
+<p>The dependency remains strictly one-way:</p>
+<div class="highlight"><pre><span></span><code>ContractModel
+      ▲
+      │ public, versioned integration API
+      │
+ETLantic
+</code></pre></div>
+<p>ContractModel must never import ETLantic, DTCS, DPCS, pipeline plans,
+orchestrators, or dataframe execution plugins.</p>
+<h2 id="current-strengths">Current strengths<a class="headerlink" href="#current-strengths" title="Permanent link">&para;</a></h2>
+<p>ContractModel 0.1.2 already provides:</p>
+<ul>
+<li>a small <code>DataContract</code> facade over a Canonical Contract Model (CCM)</li>
+<li>ODCS and Pydantic round trips</li>
+<li>structured record, JSON, CSV, Parquet, Pandas, and Polars validation</li>
+<li>compatibility modes and structured contract diffs</li>
+<li>JSON Schema, OpenAPI, Markdown, RDF, SHACL, and OWL exports</li>
+<li>a typed package, strict mypy configuration, Ruff, and a 94% coverage gate</li>
+<li>a useful CLI, bundled examples, SARIF, and documented error codes</li>
+<li>explicit API stability tiers and honest experimental labels</li>
+<li>safe YAML loading, file/row limits, bounded registry responses, and
+  name-only plugin discovery for <code>doctor</code></li>
+</ul>
+<p>The upgrade should consolidate these strengths around a smaller stable
+semantic kernel.</p>
+<h2 id="findings-that-should-shape-02">Findings that should shape 0.2+<a class="headerlink" href="#findings-that-should-shape-02" title="Permanent link">&para;</a></h2>
+<h3 id="the-integration-surface-is-implicit">The integration surface is implicit<a class="headerlink" href="#the-integration-surface-is-implicit" title="Permanent link">&para;</a></h3>
+<p>ETLantic repeatedly constructs <code>DataContract</code> objects to discover identity,
+version, fields, and compatibility. It separately introspects Pydantic fields
+to normalize schemas and imports <code>contractmodel.validation.limits</code> rather than
+a top-level safety API. ContractModel needs an explicit consumer integration
+surface so downstream tools do not depend on storage or Pydantic internals.</p>
+<h3 id="canonical-values-are-not-immutable-or-wire-versioned">Canonical values are not immutable or wire-versioned<a class="headerlink" href="#canonical-values-are-not-immutable-or-wire-versioned" title="Permanent link">&para;</a></h3>
+<p>CCM models reject unknown properties but contain mutable lists, dictionaries,
+<code>Any</code> metadata, defaults, examples, thresholds, and extensions. There is no
+published CCM wire-schema identifier, canonical byte encoding, or contract
+fingerprint API. This weakens cache identity and cross-process evidence.</p>
+<h3 id="fidelity-is-represented-unevenly">Fidelity is represented unevenly<a class="headerlink" href="#fidelity-is-represented-unevenly" title="Permanent link">&para;</a></h3>
+<p>ODCS imports record selected warnings, but fidelity is not a uniform result of
+every conversion. Consumers need exact, normalized, extended, lossy,
+unsupported, or rejected outcomes with stable codes and contract paths.</p>
+<h3 id="validation-is-not-yet-a-scalable-protocol">Validation is not yet a scalable protocol<a class="headerlink" href="#validation-is-not-yet-a-scalable-protocol" title="Permanent link">&para;</a></h3>
+<p><code>validate_records()</code> materializes iterables. File/dataframe validation is
+whole-input oriented. Results may contain raw invalid values, which is useful
+locally but unsafe by default for logs, reports, SARIF, and pipeline evidence.
+ContractModel needs bounded streaming, diagnostic budgets, redaction,
+cancellation, and engine-neutral request/result models.</p>
+<h3 id="native-and-pushed-down-checks-need-one-truth-model">Native and pushed-down checks need one truth model<a class="headerlink" href="#native-and-pushed-down-checks-need-one-truth-model" title="Permanent link">&para;</a></h3>
+<p>Pydantic, Pandas, Polars, SQL, and Spark enforce overlapping subsets of the
+same rules. ContractModel should publish normalized validation requirements and
+semantic capabilities. It should not absorb SQL, Spark, scheduling, or pipeline
+execution.</p>
+<h3 id="plugin-and-registry-trust-remain-experimental">Plugin and registry trust remain experimental<a class="headerlink" href="#plugin-and-registry-trust-remain-experimental" title="Permanent link">&para;</a></h3>
+<p><code>doctor</code> lists entry-point names without loading code, but execution imports
+plugins without a manifest, protocol version, allowlist, provenance, or
+capability validation. Registry URLs can target unsafe addresses or redirects,
+and environment credentials need origin binding. These surfaces should remain
+experimental until they fail closed.</p>
+<h3 id="adapter-count-was-prioritized-too-early">Adapter count was prioritized too early<a class="headerlink" href="#adapter-count-was-prioritized-too-early" title="Permanent link">&para;</a></h3>
+<p>The previous bootstrap roadmap expanded quickly to JSON Schema, OpenAPI, Avro,
+Protobuf, Parquet, dbt, lakehouse, event, and catalog adapters. The active
+<a href="../ROADMAP/">ROADMAP.md</a> defers new formats until <strong>0.4</strong>, after a stable
+adapter/fidelity protocol, canonical type system, and conformance suite.</p>
+<h3 id="release-assurance-needs-a-10-path">Release assurance needs a 1.0 path<a class="headerlink" href="#release-assurance-needs-a-10-path" title="Permanent link">&para;</a></h3>
+<p>CI covers Python 3.10–3.12 on Linux. The stable path should add current Python,
+Windows/macOS, isolated wheels, minimal dependencies, optional-extra matrices,
+performance budgets, property/fuzz tests, SBOM/provenance, signed artifacts,
+and trusted publishing.</p>
+<h2 id="ownership-boundary">Ownership boundary<a class="headerlink" href="#ownership-boundary" title="Permanent link">&para;</a></h2>
+<h3 id="contractmodel-owns">ContractModel owns<a class="headerlink" href="#contractmodel-owns" title="Permanent link">&para;</a></h3>
+<ul>
+<li>the versioned Canonical Contract Model</li>
+<li>Python/Pydantic normalization and ODCS version policy</li>
+<li>logical types, nullability, constraints, quality declarations, and metadata</li>
+<li>contract identity, semantic version, canonical serialization, and fingerprint</li>
+<li>validation requirement semantics and reference record validation</li>
+<li>compatibility and contract-evolution classification</li>
+<li>import/export fidelity findings</li>
+<li>safe contract loading and bounded validation</li>
+<li>structured, redactable validation and compatibility evidence</li>
+<li>adapter and validator conformance suites</li>
+</ul>
+<h3 id="etlantic-owns">ETLantic owns<a class="headerlink" href="#etlantic-owns" title="Permanent link">&para;</a></h3>
+<ul>
+<li>pipeline graph semantics and identities</li>
+<li><code>Extract</code>, transformations, <code>Load</code>, and subpipelines</li>
+<li>DTCS and DPCS integration</li>
+<li>profiles, bindings, plugin selection, and security domains</li>
+<li>deciding where and when contract validation occurs</li>
+<li>fail, reject, quarantine, or warn outcome policy</li>
+<li>execution regions, materialization, retries, scheduling, and orchestration</li>
+<li>plans, run reports, lineage, and artifacts</li>
+<li>mapping ContractModel logical types to DTCS/backend protocols</li>
+</ul>
+<h3 id="execution-plugins-own">Execution plugins own<a class="headerlink" href="#execution-plugins-own" title="Permanent link">&para;</a></h3>
+<ul>
+<li>compiling normalized requirements to backend-native checks</li>
+<li>truthful capabilities for rules they preserve</li>
+<li>data access, vectorization, pushdown, materialization, and collection</li>
+<li>normalized evidence without redefining ContractModel semantics</li>
+</ul>
+<h2 id="required-public-integration-api">Required public integration API<a class="headerlink" href="#required-public-integration-api" title="Permanent link">&para;</a></h2>
+<p>Names are illustrative; the capabilities are required.</p>
+<h3 id="recognition">Recognition<a class="headerlink" href="#recognition" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_contract_model</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeGuard</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ContractModel</span><span class="p">]]:</span> <span class="o">...</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_contract_model</span><span class="p">(</span><span class="n">annotation</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">ContractModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<h3 id="immutable-normalized-introspection">Immutable normalized introspection<a class="headerlink" href="#immutable-normalized-introspection" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">descriptor</span> <span class="o">=</span> <span class="n">describe_contract</span><span class="p">(</span><span class="n">Customer</span><span class="p">)</span>
+
+<span class="n">descriptor</span><span class="o">.</span><span class="n">identity</span>
+<span class="n">descriptor</span><span class="o">.</span><span class="n">version</span>
+<span class="n">descriptor</span><span class="o">.</span><span class="n">schema</span>
+<span class="n">descriptor</span><span class="o">.</span><span class="n">fingerprint</span>
+<span class="n">descriptor</span><span class="o">.</span><span class="n">provenance</span>
+<span class="n">descriptor</span><span class="o">.</span><span class="n">fidelity</span>
+</code></pre></div>
+<p>The descriptor must be deeply immutable, versioned, canonically serializable,
+and free of live classes, callables, source rows, and secrets. It must preserve
+nested object/array/map/enum, decimal, temporal, binary, UUID, URI, email, and
+extension types and distinguish required, optional, nullable, defaulted, and
+missing values.</p>
+<h3 id="generated-model-identity">Generated-model identity<a class="headerlink" href="#generated-model-identity" title="Permanent link">&para;</a></h3>
+<p>ContractModel should attach and preserve contract ID, version, canonical
+fingerprint, source format/version, provenance, and fidelity when generating a
+Pydantic class. Reconstructing a contract from that class must not silently
+replace published identity or version with inferred defaults.</p>
+<h3 id="compatibility-report">Compatibility report<a class="headerlink" href="#compatibility-report" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">report</span> <span class="o">=</span> <span class="n">compare_contracts</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">CompatibilityMode</span><span class="o">.</span><span class="n">BACKWARD</span><span class="p">)</span>
+</code></pre></div>
+<p>The versioned report should contain source/target identities and fingerprints,
+policy version, overall category, and stable path-specific findings with old
+and new normalized values, rationale, and remediation. Consumers should not
+parse messages or recompute compatibility.</p>
+<h3 id="validation-specification-and-result">Validation specification and result<a class="headerlink" href="#validation-specification-and-result" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">spec</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">validation_spec</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">validate_records</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">)</span>
+</code></pre></div>
+<p>The immutable specification describes required checks without data access. The
+request/result should support row/byte/error/warning/depth/time budgets,
+batching, cancellation, redaction, stable diagnostics, applied/skipped/
+unsupported/approximate outcomes, and engine evidence. Invalid rows belong in
+opaque runtime handles, never serialized results. Raw values should be excluded
+by default with bounded opt-in debugging only.</p>
+<h3 id="safe-loading-policy">Safe loading policy<a class="headerlink" href="#safe-loading-policy" title="Permanent link">&para;</a></h3>
+<p>All loaders should accept one public policy covering approved roots, normalized
+paths, symlinks, special files, byte/depth/collection/reference limits, allowed
+formats/versions, remote resolution, and diagnostic budgets. Consumers should
+not import <code>contractmodel.validation.limits</code>.</p>
+<h3 id="adapter-fidelity-result">Adapter fidelity result<a class="headerlink" href="#adapter-fidelity-result" title="Permanent link">&para;</a></h3>
+<p>Every import/export should expose a versioned report with exact, normalized,
+extended, lossy, unsupported, or rejected status and path-specific findings.
+Lossy output must require explicit policy.</p>
+<h2 id="02-semantic-kernel-and-integration-api">0.2 — Semantic kernel and integration API<a class="headerlink" href="#02-semantic-kernel-and-integration-api" title="Permanent link">&para;</a></h2>
+<h3 id="deliver">Deliver<a class="headerlink" href="#deliver" title="Permanent link">&para;</a></h3>
+<ul>
+<li>publish <code>contractmodel.ccm/1</code> and its complete JSON Schema</li>
+<li>add immutable descriptor, schema, field, constraint, identity, provenance,
+  fidelity, and fingerprint values</li>
+<li>define canonical JSON and exact fingerprint participation rules</li>
+<li>preserve identity/version/provenance across ODCS → Pydantic → CCM round trips</li>
+<li>add public recognition and annotation-resolution helpers</li>
+<li>add a public bounded loading policy</li>
+<li>define extension namespaces, JSON-value constraints, and size budgets</li>
+<li>publish supported ODCS and Pydantic ranges; cap Pydantic below v3</li>
+<li>classify every export as stable, provisional, experimental, or private</li>
+</ul>
+<h3 id="acceptance">Acceptance<a class="headerlink" href="#acceptance" title="Permanent link">&para;</a></h3>
+<ul>
+<li>equivalent contracts have identical bytes/fingerprints across supported
+  Python versions and operating systems</li>
+<li>nested mutation cannot alter a descriptor or fingerprint</li>
+<li>round trips retain identity, version, nested meaning, and fidelity evidence</li>
+<li>ETLantic obtains identity, schema, nullability, constraints, and fingerprint
+  without <code>model_fields</code> or private imports</li>
+<li>unsupported or oversized documents fail before class generation</li>
+</ul>
+<h3 id="exit-gate">Exit gate<a class="headerlink" href="#exit-gate" title="Permanent link">&para;</a></h3>
+<p>ETLantic can implement its data-contract analysis boundary using only
+documented top-level ContractModel APIs.</p>
+<h2 id="03-bounded-validation-protocol">0.3 — Bounded validation protocol<a class="headerlink" href="#03-bounded-validation-protocol" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_1">Deliver<a class="headerlink" href="#deliver_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>publish versioned immutable validation specification and result schemas</li>
+<li>make diagnostic budgets deterministic and redact values by default</li>
+<li>validate iterators/batches without unconditional materialization</li>
+<li>define cancellation, timeout, partial-result, and cleanup semantics</li>
+<li>distinguish exact, approximate, unsupported, skipped, and failed checks</li>
+<li>expose invalid-row separation only through runtime handles</li>
+<li>separate the reference engine from optional engine adapters</li>
+<li>publish a validation-engine conformance suite</li>
+</ul>
+<h3 id="acceptance_1">Acceptance<a class="headerlink" href="#acceptance_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>unbounded iterators cannot exhaust memory before crossing a configured budget</li>
+<li>row/error/time limits stop deterministically with partial counts</li>
+<li>results, SARIF, and logs contain no source values by default</li>
+<li>Pydantic, Pandas, and Polars agree on their advertised intersection</li>
+<li>external engines report unsupported rules without silently passing them</li>
+</ul>
+<h2 id="04-adapter-and-fidelity-framework">0.4 — Adapter and fidelity framework<a class="headerlink" href="#04-adapter-and-fidelity-framework" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_2">Deliver<a class="headerlink" href="#deliver_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>publish a versioned adapter protocol and static manifest</li>
+<li>declare format/version ranges, capabilities, fidelity, and dependency tier</li>
+<li>add bounded contexts and structured fidelity results</li>
+<li>create golden and property-based round-trip suites</li>
+<li>graduate ODCS under the protocol, then JSON Schema</li>
+<li>prioritize formats by semantic coverage and user value, not count</li>
+</ul>
+<h3 id="acceptance_2">Acceptance<a class="headerlink" href="#acceptance_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>exact round trips are semantically equivalent and fingerprint-stable</li>
+<li>lossy paths identify every transformed or dropped element</li>
+<li>unsupported versions fail closed</li>
+<li>optional dependencies remain absent from core imports</li>
+<li>third-party adapters pass public fidelity conformance</li>
+</ul>
+<h2 id="05-compatibility-and-evolution">0.5 — Compatibility and evolution<a class="headerlink" href="#05-compatibility-and-evolution" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_3">Deliver<a class="headerlink" href="#deliver_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>version compatibility policy independently from CCM</li>
+<li>define identical, compatible, conditional, breaking, and unknown outcomes</li>
+<li>cover nested, rename, default, required/nullable, enum, numeric, temporal,
+  composite, constraint, key, index, and semantic changes</li>
+<li>distinguish producer, consumer, backward, forward, and full compatibility</li>
+<li>add deterministic migration guidance and machine-readable actions</li>
+<li>provide CCM/result schema migration functions and historical fixtures</li>
+</ul>
+<h3 id="acceptance_3">Acceptance<a class="headerlink" href="#acceptance_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>every stable type/constraint has documented compatibility semantics</li>
+<li>aliases cannot hide breaking semantic changes</li>
+<li>unknown extensions do not become optimistically compatible</li>
+<li>ETLantic maps structured findings without parsing messages</li>
+</ul>
+<h2 id="06-trust-plugins-and-registries">0.6 — Trust, plugins, and registries<a class="headerlink" href="#06-trust-plugins-and-registries" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_4">Deliver<a class="headerlink" href="#deliver_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>split plugin discovery, evaluation, authorization, and loading</li>
+<li>inspect static manifests without importing entry points</li>
+<li>version protocols and capabilities; add allowlists, version ranges,
+  provenance/digests, duplicate detection, and conflicts</li>
+<li>add adversarial conformance and an external reference plugin</li>
+<li>enforce registry scheme/host/address, redirect, TLS, timeout, response, and
+  private/metadata-target policy</li>
+<li>bind credentials to approved origins and support digest/signature checks</li>
+<li>emit security events without credentials or source samples</li>
+</ul>
+<h3 id="acceptance_4">Acceptance<a class="headerlink" href="#acceptance_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>disallowed plugins are rejected without import</li>
+<li>trusted names alone cannot grant behavior</li>
+<li>unsafe registry destinations and redirects fail by default</li>
+<li>errors expose no tokens or credential-bearing URLs</li>
+</ul>
+<h2 id="07-developer-experience-and-cli">0.7 — Developer experience and CLI<a class="headerlink" href="#07-developer-experience-and-cli" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_5">Deliver<a class="headerlink" href="#deliver_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>organize CLI workflows around <code>init</code>, <code>inspect</code>, <code>validate</code>, <code>diff</code>,
+  <code>convert</code>, <code>export</code>, <code>doctor</code>, and optional <code>registry</code></li>
+<li>standardize human/JSON/SARIF diagnostics and exit codes</li>
+<li>add consistent dry-run, color, quiet, verbose, and non-interactive behavior</li>
+<li>declare targets and overwrite policy for every mutation</li>
+<li>make <code>doctor</code> inspect manifests and safety without loading plugins</li>
+<li>generate deterministic importable Python and type-check it</li>
+<li>publish focused guides for users, adapter/engine authors, and integrators</li>
+</ul>
+<h3 id="exit-gate_1">Exit gate<a class="headerlink" href="#exit-gate_1" title="Permanent link">&para;</a></h3>
+<p>The CLI is a projection of the public library API, not parallel semantics.</p>
+<h2 id="08-performance-and-conformance">0.8 — Performance and conformance<a class="headerlink" href="#08-performance-and-conformance" title="Permanent link">&para;</a></h2>
+<h3 id="deliver_6">Deliver<a class="headerlink" href="#deliver_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>set time/memory budgets for loading, normalization, generation, validation,
+  diffing, and export</li>
+<li>benchmark nested/wide contracts and representative data sizes</li>
+<li>add Hypothesis properties and malformed/deep/recursive fuzz corpora</li>
+<li>test Linux, macOS, Windows, and every supported Python line</li>
+<li>test minimal core and each extra from isolated wheels</li>
+<li>test ETLantic against minimum and latest ContractModel versions</li>
+<li>publish conformance packages for external engines/adapters</li>
+</ul>
+<h3 id="acceptance_5">Acceptance<a class="headerlink" href="#acceptance_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>budget regressions fail CI or require reviewed budget changes</li>
+<li>core import does not import optional engines or semantic/registry code</li>
+<li>adversarial inputs terminate within configured bounds</li>
+<li>source and wheel behavior match</li>
+</ul>
+<h2 id="09-10-release-candidate">0.9 — 1.0 release candidate<a class="headerlink" href="#09-10-release-candidate" title="Permanent link">&para;</a></h2>
+<ul>
+<li>freeze API, CCM, descriptor, validation, compatibility, diagnostic, fidelity,
+  adapter, and plugin snapshots</li>
+<li>rehearse upgrades from every supported 0.x artifact</li>
+<li>publish removals and migrations for deprecated 0.1 APIs</li>
+<li>complete security control-to-test traceability</li>
+<li>generate SBOMs and signed provenance; use trusted publishing</li>
+<li>run source, sdist, and wheel acceptance everywhere supported</li>
+</ul>
+<p>The exact candidate must pass compatibility, security, upgrade, rollback,
+packaging, performance, and ETLantic integration rehearsals unchanged.</p>
+<h2 id="10-stable-data-contract-foundation">1.0 — Stable data-contract foundation<a class="headerlink" href="#10-stable-data-contract-foundation" title="Permanent link">&para;</a></h2>
+<p>ContractModel 1.0 ships only when:</p>
+<ul>
+<li>canonical and public result schemas are versioned and stable</li>
+<li>canonical bytes and fingerprints are deterministic and verified</li>
+<li>Python/ODCS round trips publish complete fidelity evidence</li>
+<li>validation is bounded, redactable, cancellable, and engine-conformant</li>
+<li>compatibility covers every stable logical type and constraint</li>
+<li>plugin and registry trust boundaries fail closed</li>
+<li>supported adapters pass round-trip/fidelity conformance</li>
+<li>CLI and library expose the same semantics</li>
+<li>minimal and optional installations pass isolated wheels</li>
+<li>ETLantic depends only on stable public APIs</li>
+<li>ContractModel has no ETLantic or pipeline-specific dependency</li>
+</ul>
+<h2 id="etlantic-adoption-plan">ETLantic adoption plan<a class="headerlink" href="#etlantic-adoption-plan" title="Permanent link">&para;</a></h2>
+<h3 id="1-define-shared-fixtures">1. Define shared fixtures<a class="headerlink" href="#1-define-shared-fixtures" title="Permanent link">&para;</a></h3>
+<p>Convert the required integration surface into executable protocol/schema
+fixtures. Cover nested fields, aliases, constraints, defaults, nullability,
+decimals, temporal types, enums, arrays, maps, and extensions. Keep ETLantic's
+internal adapter while ContractModel 0.2 develops.</p>
+<h3 id="2-run-dual-version-acceptance">2. Run dual-version acceptance<a class="headerlink" href="#2-run-dual-version-acceptance" title="Permanent link">&para;</a></h3>
+<p>Test ETLantic against 0.1.2 and 0.2 prereleases. Compare identities,
+fingerprints, ODCS, diagnostics, compatibility, and validation outcomes. Do not
+change ETLantic plan semantics to match a prerelease accident.</p>
+<h3 id="3-replace-duplicated-behavior">3. Replace duplicated behavior<a class="headerlink" href="#3-replace-duplicated-behavior" title="Permanent link">&para;</a></h3>
+<ul>
+<li>subclass/annotation checks → ContractModel recognition helpers</li>
+<li>repeated identity conversion → descriptor identity</li>
+<li>direct <code>model_fields</code> normalization → normalized schema view</li>
+<li>private limits import → public safety policy</li>
+<li>message-level diff mapping → structured compatibility findings</li>
+<li>ad hoc model attributes → supported identity/provenance metadata</li>
+</ul>
+<p>ETLantic retains DTCS projection, physical schema observations, pipeline drift
+policy, validation placement/outcomes, plans, artifacts, security domains, and
+run reports.</p>
+<h3 id="4-pin-and-support-deliberately">4. Pin and support deliberately<a class="headerlink" href="#4-pin-and-support-deliberately" title="Permanent link">&para;</a></h3>
+<p>After validation, pin a bounded range such as <code>contractmodel&gt;=0.2,&lt;0.3</code>, test
+its lowest and newest versions, and require migration evidence before widening.
+Record the ContractModel version, descriptor schema, compatibility policy, and
+contract fingerprints in ETLantic evidence where relevant.</p>
+<h3 id="5-rehearse-10-interoperability">5. Rehearse 1.0 interoperability<a class="headerlink" href="#5-rehearse-10-interoperability" title="Permanent link">&para;</a></h3>
+<p>Jointly prove code-first/ODCS equivalence, identity preservation, validation
+parity, structured compatibility, secret/source-row-free evidence, fail-closed
+loss handling, and stable pipeline plans across supported upgrades. The two
+projects do not need lockstep versions or release schedules.</p>
+<h2 id="prioritization-rule">Prioritization rule<a class="headerlink" href="#prioritization-rule" title="Permanent link">&para;</a></h2>
+<p>Prefer semantic depth over integration count:</p>
+<ol>
+<li>canonical semantics and identity</li>
+<li>bounded validation and evidence</li>
+<li>compatibility and fidelity</li>
+<li>trust and conformance</li>
+<li>developer experience</li>
+<li>additional formats and registries</li>
+</ol>
+<p>A new adapter should not outrank a missing guarantee in the canonical model it
+targets.</p>
+<h2 id="success-measures">Success measures<a class="headerlink" href="#success-measures" title="Permanent link">&para;</a></h2>
+<ul>
+<li>ETLantic imports no private ContractModel modules</li>
+<li>one descriptor replaces repeated Pydantic introspection</li>
+<li>equivalent contracts have stable cross-process fingerprints</li>
+<li>validation results are source-row-free by default</li>
+<li>adapter losses are machine-readable and path-specific</li>
+<li>third-party validators/adapters pass public conformance</li>
+<li>unsafe plugins and registry destinations fail before effects</li>
+<li>core-only import remains lightweight</li>
+<li>scale and compatibility are measured rather than implied</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
