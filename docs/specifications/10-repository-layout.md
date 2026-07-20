@@ -1,6 +1,6 @@
 # Repository layout
 
-Current layout for ContractModel 0.1.x. Active release plan:
+Current layout for ContractModel 0.2.x. Active release plan:
 [ROADMAP.md](../../ROADMAP.md).
 
 ```text
@@ -20,8 +20,17 @@ contractmodel/
       __init__.py
       contract.py          # DataContract facade
       examples.py          # Bundled example helpers
-      model.py
+      model.py             # ContractModel base for generated Pydantic
+      canonical.py         # Canonical JSON / CCM dict helpers
+      fingerprint.py
+      recognition.py
+      policy.py            # LoadingPolicy
+      wire.py              # contractmodel.ccm/1 helpers
+      versions.py          # ODCS / package version constants
+      extensions.py
       errors.py
+      descriptor/          # Immutable ContractDescriptor stack
+      schemas/ccm/v1/      # Packaged CCM JSON Schema
       core/
         ccm.py
         types.py
@@ -29,6 +38,7 @@ contractmodel/
         result.py
       adapters/
         odcs.py
+        odcs_conformance.py  # pyodcs validate / parse / diff_odcs
         pydantic.py
       validation/
         engine.py
@@ -43,6 +53,7 @@ contractmodel/
         json_schema.py
         openapi.py
         odcs.py
+        registry.py        # export_stability
       cli/
         app.py
       plugins/
@@ -56,6 +67,7 @@ contractmodel/
         shacl.py
         owl.py
       examples_data/       # Mirror of repository examples/ (shipped in wheel)
+      py.typed
   tests/
   examples/
     README.md

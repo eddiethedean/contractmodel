@@ -75,7 +75,7 @@ class ValidationMode(str, Enum):
 
 ## Current vs target behavior
 
-### Current (0.1.x)
+### Current (0.2.x)
 
 - `validate_records()` materializes iterables.
 - File and dataframe validation are whole-input oriented.

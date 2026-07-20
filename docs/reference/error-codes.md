@@ -33,7 +33,7 @@ Stable rule IDs for programmatic handling, SARIF output, and CI dashboards. Mess
 | Code | When raised |
 |------|-------------|
 | `CM_QUALITY_COMPLETENESS` | Completeness rule failed (e.g. row count below minimum) |
-| `CM_QUALITY_FRESHNESS` | Freshness rule — **stub warning** in 0.1.x |
+| `CM_QUALITY_FRESHNESS` | Freshness rule — **stub warning** in 0.2.x |
 
 ## Runtime
 

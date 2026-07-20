@@ -2,7 +2,7 @@
 
 ## Load ODCS contracts
 
-ContractModel loads contracts from the **Open Data Contract Standard (ODCS)** YAML format and round-trips them through the **Canonical Contract Model (CCM)**.
+ContractModel loads **ODCS** (`apiVersion: v3.1.0`) via [pyodcs](https://pypi.org/project/pyodcs/) and maps conformant documents into the **Canonical Contract Model (CCM)**.
 
 ```python
 from contractmodel import DataContract
@@ -15,11 +15,11 @@ print(contract.name, contract.version)
 # From a git clone — repository paths also work
 contract = DataContract.from_odcs("examples/customer_events.odcs.yaml")
 
-# Export back to ODCS
+# Export back to ODCS (re-validated with pyodcs)
 odcs = contract.to_odcs()
 ```
 
-Extensions, constraints, and `apiVersion`/`kind` metadata are preserved through import and export.
+Identity, schema structure, and fingerprint-relevant extensions round-trip. Some ODCS-only metadata is preserved in CCM extensions (`odcsTeam`, `odcsDescription`, …); check `import_warnings` / `describe()` for fidelity notes.
 
 ## Validate CSV data
 
@@ -59,4 +59,4 @@ Renames detected via field aliases are classified as non-breaking when the alias
 - [CLI walkthrough](cli-walkthrough.md)
 - [Error code catalog](../reference/error-codes.md)
 - [API reference](../reference/api.md)
-- [Roadmap](../ROADMAP.md) — what lands in 0.2+
+- [Roadmap](../ROADMAP.md) — what lands in 0.3+

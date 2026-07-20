@@ -56,13 +56,21 @@ See [docs/specifications/10-repository-layout.md](docs/specifications/10-reposit
 
 Follow **[ROADMAP.md](ROADMAP.md)** when choosing what to build next:
 
-1. **0.2** — semantic kernel and public integration API (descriptors, fingerprints, recognition helpers, loading policy)
+1. **0.2** — shipped (semantic kernel, descriptors, fingerprints, loading policy, pyodcs)
 2. **0.3** — bounded validation protocol
 3. **0.4** — adapter/fidelity framework, then new formats
 4. Compatibility (**0.5**), trust (**0.6**), CLI/DX (**0.7**), conformance (**0.8**)
 
 Prefer semantic depth over new format adapters. Design detail:
 [`docs/CONTRACTMODEL_UPGRADE_PLAN.md`](docs/CONTRACTMODEL_UPGRADE_PLAN.md).
+
+## Releasing
+
+1. Confirm `pyproject.toml` and `contractmodel.__version__` match (e.g. `0.2.0`).
+2. Ensure `CHANGELOG.md` has a dated section for that version; keep forward-looking limits under **Unreleased**.
+3. Run `ruff check src tests`, `mypy src`, and `pytest`.
+4. Optionally `python -m build && twine check dist/*`.
+5. Tag `vX.Y.Z` on `main` and push the tag. The [release workflow](.github/workflows/release.yml) runs CI on 3.10–3.12, verifies the tag matches `pyproject.toml`, then publishes to PyPI (`PYPI_API_TOKEN`).
 
 ## Pull requests
 
